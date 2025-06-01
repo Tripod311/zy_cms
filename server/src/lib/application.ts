@@ -8,6 +8,7 @@ import DBProvider from "./db";
 import StorageProvider from "./storage";
 import APIProvider from "./api";
 import AuthProvider from "./auth";
+import AdminPanel from "./admin";
 
 export default class Application {
   public db: DBProvider | null = null;
@@ -39,13 +40,9 @@ export default class Application {
       AuthProvider.setup(config.auth);
       this.auth = AuthProvider.getInstance();
     }
-  }
 
-  public start () {
-
-  }
-
-  public stop () {
-
+    if (config.admin_panel) {
+      await AdminPanel.setup();
+    }
   }
 };

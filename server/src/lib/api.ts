@@ -10,14 +10,28 @@ export default class APIProvider {
 	private static instance: FastifyInstance;
 	private static started: boolean;
 	private static port: number;
-	private static server: HTTP.Server | HTTPS.Server;
 
 	public static getInstance(): FastifyInstance {
 		return APIProvider.instance;
 	}
 
 	public static async setup(config: HTTPConfig) {
-		APIProvider.instance = Fastify();
+		APIProvider.instance = Fastify({
+			serverFactory: (handler) => {
+				if (config.credentials !== null) {
+					const options: Record<string, string> = {
+						key: readFileSync(config.credentials.key, "utf-8"),
+						cert: readFileSync(config.credentials.cert, "utf-8")
+					};
+					if (config.credentials.ca !== undefined) {
+						options.ca = readFileSync(config.credentials.ca, "utf-8");
+					}
+					return HTTPS.createServer(options, handler);
+				} else {
+					return HTTP.createServer(handler);
+				}
+			}
+		});
 
 		await APIProvider.instance.register(cookie, {
 		  secret: config.cookie_secret
@@ -31,24 +45,10 @@ export default class APIProvider {
 		}
 
 		APIProvider.port = config.port;
-
-		if (config.credentials !== null) {
-			const options: Record<string, string> = {
-				key: readFileSync(config.credentials.key, "utf-8"),
-				cert: readFileSync(config.credentials.cert, "utf-8")
-			};
-			if (config.credentials.ca !== undefined) {
-				options.ca = readFileSync(config.credentials.ca, "utf-8");
-			}
-			APIProvider.server = HTTPS.createServer(options);
-		} else {
-			APIProvider.server = HTTP.createServer();
-		}
 	}
 
 	public static start () {
 		APIProvider.instance.listen({
-			server: APIProvider.server,
 			port: APIProvider.port
 		});
 

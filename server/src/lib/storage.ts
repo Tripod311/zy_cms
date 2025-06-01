@@ -29,7 +29,7 @@ export default class StorageProvider {
   }
 
   public async create (data: StorageFile) {
-    const filePath = path.join(this.basePath, `${data.alias}.${data.extension || ''}`);
+    const filePath = path.join(this.basePath, `${data.alias}_${(new Date()).toString()}.${data.extension || ''}`);
 
     await fs.promises.writeFile(filePath, data.content as Buffer);
     await DBProvider.getInstance().create("media", {alias: data.alias, path: filePath});

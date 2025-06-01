@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { AuthConfig } from "./types";
 import DBProvider from "./db";
-import APIProvier from "./api";
+import APIProvider from "./api";
 
 export default class AuthProvider {
   private static instance: AuthProvider;
@@ -16,10 +16,10 @@ export default class AuthProvider {
 
   public static setup(config: AuthConfig) {
     AuthProvider.instance = new AuthProvider();
-    if ("jwt_secret" in config) AuthProvider.instance.jwt_secret = config.jwt_secret;
-    if ("secure_cookies" in config) AuthProvider.instance.secure_cookies = config.secure_cookies;
+    if ("jwt_secret" in config) AuthProvider.instance.jwt_secret = config.jwt_secret as string;
+    if ("secure_cookies" in config) AuthProvider.instance.secure_cookies = config.secure_cookies as boolean;
 
-    DBProvider.getInstance().query(`CREATE TABLE users IF NOT EXISTS (
+    DBProvider.getInstance().query(`CREATE TABLE IF NOT EXISTS users (
       login VARCHAR(255) PRIMARY KEY,
       password CHAR(60) NOT NULL
     )`);
@@ -57,7 +57,7 @@ export default class AuthProvider {
 
         reply.setCookie('token', newToken, {
           httpOnly: true,
-          secure: true,
+          secure: AuthProvider.instance.secure_cookies,
           sameSite: 'strict',
           path: '/',
         });
@@ -94,7 +94,7 @@ export default class AuthProvider {
 
           reply.setCookie('token', newToken, {
             httpOnly: true,
-            secure: true,
+            secure: AuthProvider.instance.secure_cookies,
             sameSite: 'strict',
             path: '/',
           });
@@ -130,7 +130,7 @@ export default class AuthProvider {
 
       reply.setCookie('token', newToken, {
         httpOnly: true,
-        secure: true,
+        secure: AuthProvider.instance.secure_cookies,
         sameSite: 'strict',
         path: '/',
       });

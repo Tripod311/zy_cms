@@ -98,7 +98,11 @@ class SqliteDriver implements DBDriver {
 
   async query<T = unknown>(sql: string, params?: unknown[]): Promise<void> {
     const request = this.db.prepare(sql);
-    request.run(params);
+    if (Array.isArray(params)) {
+      request.run(...params);
+    } else {
+      request.run();
+    }
   }
 
   async queryWithResult<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> {

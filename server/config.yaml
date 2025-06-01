@@ -1,3 +1,4 @@
+admin_panel: true
 storage:
   enable: true
   path: "./data/media"

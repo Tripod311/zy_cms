@@ -56,6 +56,8 @@ export interface AppConfig {
   http: HTTPConfig;
   auth: AuthConfig;
   localization: LocalizationConfig;
+  
+  admin_panel: boolean;
 }
 
 export interface ColumnField {

@@ -10,7 +10,7 @@ tables:
       required: true
       unique: true
     - name: content
-      type: "TEXT"
+      type: "richText"
       required: true
       localized: true
     - name: author

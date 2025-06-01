@@ -11,6 +11,7 @@ import PostgresDriver from "./dbDrivers/postgres";
 class DBProvider {
   private static instance: DBProvider;
   private driver: DBDriver;
+  public schema!: DBSchema;
 
   private constructor (driver: DBDriver) {
     this.driver = driver;
@@ -42,92 +43,94 @@ class DBProvider {
     }
 
     DBProvider.instance = new DBProvider(driver);
+    const raw = readFileSync('./schema.yaml', 'utf8');
+    const schema = yaml.parse(raw) as DBSchema;
+    DBProvider.instance.schema = schema;
   }
 
   public static async buildSchema () {
-    const raw = readFileSync('./schema.yaml', 'utf8');
-      const schema = yaml.parse(raw) as DBSchema;
-      
-      interface TableDescription {name: string; sql: string; relations: Set<string>;};
+    const schema = DBProvider.instance.schema;
+    
+    interface TableDescription {name: string; sql: string; relations: Set<string>;};
 
-      let tableSchema: TableDescription[] = [];
+    let tableSchema: TableDescription[] = [];
 
-      for (let i=0; i<schema.tables.length; i++) {
-        const name = schema.tables[i].name;
+    for (let i=0; i<schema.tables.length; i++) {
+      const name = schema.tables[i].name;
 
-        let relations: Set<string> = new Set();
-        let fields: string[] = [];
+      let relations: Set<string> = new Set();
+      let fields: string[] = [];
 
-        schema.tables[i].fields.map((f: FieldSchema) => {
-          if ('relation' in f) {
-            let onDeleteClause: string = "";
+      schema.tables[i].fields.map((f: FieldSchema) => {
+        if ('relation' in f) {
+          let onDeleteClause: string = "";
 
-            switch (f.relation.onDelete) {
-              case "cascade":
-                onDeleteClause = "ON DELETE CASCADE";
-                break;
-              case "setNull":
-                onDeleteClause = "ON DELETE SET NULL";
-                break;
-              case "restrict":
-                onDeleteClause = "ON DELETE RESTRICT";
-                break;
-              case "noAction":
-                onDeleteClause = "ON DELETE NO ACTION";
-                break;
-              case "setDefault":
-                onDeleteClause = "ON DELETE SET DEFAULT";
-                break;
+          switch (f.relation.onDelete) {
+            case "cascade":
+              onDeleteClause = "ON DELETE CASCADE";
+              break;
+            case "setNull":
+              onDeleteClause = "ON DELETE SET NULL";
+              break;
+            case "restrict":
+              onDeleteClause = "ON DELETE RESTRICT";
+              break;
+            case "noAction":
+              onDeleteClause = "ON DELETE NO ACTION";
+              break;
+            case "setDefault":
+              onDeleteClause = "ON DELETE SET DEFAULT";
+              break;
+          }
+
+          switch (f.relation.kind) {
+            case "one-to-one":
+              fields.push(`${f.name} ${f.type} UNIQUE REFERENCES ${f.relation.table}(${f.relation.column}) ${f.required ? "NOT NULL" : ""} ${onDeleteClause}`);
+              break;
+            case "many-to-one":
+              fields.push(`${f.name} ${f.type} REFERENCES ${f.relation.table}(${f.relation.column}) ${f.required ? "NOT NULL" : ""} ${onDeleteClause}`);
+              break;
+          }
+
+          relations.add(f.relation.table);
+        } else {
+          if (f.localized) {
+            for (let locale of LocalizationProvider.getInstance().locales) {
+              fields.push(`${f.name}.${locale} ${f.type} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
             }
-
-            switch (f.relation.kind) {
-              case "one-to-one":
-                fields.push(`${f.name} ${f.type} UNIQUE REFERENCES ${f.relation.table}(${f.relation.column}) ${f.required ? "NOT NULL" : ""} ${onDeleteClause}`);
-                break;
-              case "many-to-one":
-                fields.push(`${f.name} ${f.type} REFERENCES ${f.relation.table}(${f.relation.column}) ${f.required ? "NOT NULL" : ""} ${onDeleteClause}`);
-                break;
-            }
-
-            relations.add(f.relation.table);
           } else {
-            if (f.localized) {
-              for (let locale of LocalizationProvider.getInstance().locales) {
-                fields.push(`${f.name}.${locale} ${f.type} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
-              }
-            } else {
-              fields.push(`${f.name} ${f.type} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
-            }
-          }
-        });
-
-        tableSchema.push({
-          name: name,
-          sql: fields.join(", "),
-          relations: relations
-        });
-      }
-
-      while (tableSchema.length > 0) {
-        let selectedTable: TableDescription | null = null;
-        let selectedTableIndex: number = -1;
-
-        for (let i=0; i<tableSchema.length; i++) {
-          if (tableSchema[i].relations.size === 0) {
-            selectedTable = tableSchema[i];
-            selectedTableIndex = i;
-            break;
+            fields.push(`${f.name} ${f.type} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
           }
         }
+      });
 
-        if (selectedTable === null) throw new Error("Circular dependency in DB schema");
+      tableSchema.push({
+        name: name,
+        sql: fields.join(", "),
+        relations: relations
+      });
+    }
 
-        await DBProvider.instance.query(`CREATE TABLE IF NOT EXISTS ${selectedTable.name} (${selectedTable.sql})`);
-        tableSchema.splice(selectedTableIndex, 1);
-        for (let i=0; i<tableSchema.length; i++) {
-          tableSchema[i].relations.delete(selectedTable.name);
+    while (tableSchema.length > 0) {
+      let selectedTable: TableDescription | null = null;
+      let selectedTableIndex: number = -1;
+
+      for (let i=0; i<tableSchema.length; i++) {
+        if (tableSchema[i].relations.size === 0) {
+          selectedTable = tableSchema[i];
+          selectedTableIndex = i;
+          break;
         }
       }
+
+      if (selectedTable === null) throw new Error("Circular dependency in DB schema");
+
+      await DBProvider.instance.query(`CREATE TABLE IF NOT EXISTS ${selectedTable.name} (${selectedTable.sql})`);
+      tableSchema.splice(selectedTableIndex, 1);
+      for (let i=0; i<tableSchema.length; i++) {
+        tableSchema[i].relations.delete(selectedTable.name);
+      }
+    }
   }
 
   async create<T = unknown>(table: string, data: Partial<T>, options?: CreateOptions): Promise<void> {
