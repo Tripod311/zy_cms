@@ -42,7 +42,7 @@ class PostgresDriver implements DBDriver {
 
     const sql = `SELECT ${fieldsSql} FROM "${table}"${whereSql ? ' ' + whereSql : ''}${buildQueryTail(options)}`;
     const result = await this.client.query(sql, whereParams);
-    return result.rows;
+    return result.rows as T[];
   }
 
   async update<T = unknown>(table: string, data: Partial<T>, options?: UpdateOptions): Promise<void> {
@@ -84,6 +84,11 @@ class PostgresDriver implements DBDriver {
 
   async query<T = unknown>(sql: string, params?: unknown[]): Promise<void> {
     const result = await this.client.query(sql, params ?? []);
+  }
+
+  async queryWithResult<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> {
+    const result = await this.client.query(sql, params);
+    return result.rows as T[];
   }
 }
 

@@ -1,7 +1,10 @@
+import { mkdirSync } from "fs";
+import path from "path";
 import Database from "better-sqlite3";
 import { buildWhere, buildQueryTail } from "./sqlConstructor";
 class SqliteDriver {
     async connect(options) {
+        mkdirSync(path.dirname(options.path), { recursive: true });
         this.db = new Database(options.path);
     }
     async create(table, data, options) {
@@ -65,6 +68,17 @@ class SqliteDriver {
     async query(sql, params) {
         const request = this.db.prepare(sql);
         request.run(params);
+    }
+    async queryWithResult(sql, params) {
+        const stmt = this.db.prepare(sql);
+        if (params !== undefined) {
+            const result = stmt.all(...params);
+            return result;
+        }
+        else {
+            const result = stmt.all();
+            return result;
+        }
     }
 }
 export default SqliteDriver;

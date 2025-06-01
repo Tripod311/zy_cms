@@ -56,4 +56,5 @@ export interface DBDriver {
   delete(table: string, options?: DeleteOptions): Promise<void>;
 
   query<T = unknown>(sql: string, params?: unknown[]): Promise<void>;
+  queryWithResult<T = unknown>(sql: string, params?: unknown[]): Promise<T[]>;
 }

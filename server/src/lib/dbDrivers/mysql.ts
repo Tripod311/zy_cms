@@ -84,6 +84,11 @@ class MysqlDriver implements DBDriver {
   async query<T = unknown>(sql: string, params?: unknown[]): Promise<void> {
     const [rows] = await this.connection.execute(sql, params ?? []);
   }
+
+  async queryWithResult<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> {
+    const [rows] = await this.connection.execute(sql, params);
+    return rows as T[];
+  }
 }
 
 export default MysqlDriver;

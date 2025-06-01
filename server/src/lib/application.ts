@@ -1,9 +1,11 @@
 import { readFileSync } from 'fs'
 import yaml from "yaml";
 
-import Database from "./db";
-import LocalizationProvider from "./localization";
 import {AppConfig} from "./types";
+import LocalizationProvider from "./localization";
+import DBProvider from "./db";
+import AuthProvider from "./auth";
+import StorageProvider from "./storage";
 
 export default class Application {
   public async launch () {
@@ -14,6 +16,10 @@ export default class Application {
       LocalizationProvider.setup(config.localization);
     }
 
-    await Database.setup(config.db);
+    await DBProvider.setup(config.db);
+
+    if (config.storage.enable) {
+      StorageProvider.setup(config.storage.path as string);
+    }
   }
 };

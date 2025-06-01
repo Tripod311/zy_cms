@@ -1,3 +1,5 @@
+import { mkdirSync } from "fs";
+import path from "path";
 import Database, { Database as DatabaseType } from "better-sqlite3";
 import { DBDriver, CreateOptions, ReadOptions, UpdateOptions, DeleteOptions } from "./driver";
 import { buildWhere, buildQueryTail } from "./sqlConstructor";
@@ -6,6 +8,8 @@ class SqliteDriver implements DBDriver {
   private db!: DatabaseType;
 
   async connect(options: {path: string}): Promise<void> {
+    mkdirSync(path.dirname(options.path), {recursive: true});
+
     this.db = new Database(options.path);
   }
 
@@ -91,6 +95,17 @@ class SqliteDriver implements DBDriver {
   async query<T = unknown>(sql: string, params?: unknown[]): Promise<void> {
     const request = this.db.prepare(sql);
     request.run(params);
+  }
+
+  async queryWithResult<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> {
+    const stmt = this.db.prepare(sql);
+    if (params !== undefined) {
+      const result = stmt.all(...params) as T[];
+      return result;
+    } else {
+      const result = stmt.all() as T[];
+      return result;
+    }
   }
 }
 

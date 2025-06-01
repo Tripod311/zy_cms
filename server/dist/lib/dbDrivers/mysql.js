@@ -61,5 +61,9 @@ class MysqlDriver {
     async query(sql, params) {
         const [rows] = await this.connection.execute(sql, params ?? []);
     }
+    async queryWithResult(sql, params) {
+        const [rows] = await this.connection.execute(sql, params);
+        return rows;
+    }
 }
 export default MysqlDriver;

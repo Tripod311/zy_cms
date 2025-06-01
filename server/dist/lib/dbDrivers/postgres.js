@@ -62,5 +62,9 @@ class PostgresDriver {
     async query(sql, params) {
         const result = await this.client.query(sql, params ?? []);
     }
+    async queryWithResult(sql, params) {
+        const result = await this.client.query(sql, params);
+        return result.rows;
+    }
 }
 export default PostgresDriver;

@@ -33,7 +33,7 @@ export interface AuthConfig {
 
 export interface LocalizationConfig {
   enable: boolean;
-  locales?: string[];
+  locales: string[];
   fallbackLocale: string;
 }
 
@@ -46,32 +46,39 @@ export interface AppConfig {
 }
 
 export interface ColumnField {
-  name: string
-  type: string
-  required?: boolean
-  unique?: boolean
-  localized?: boolean
+  name: string;
+  type: string;
+  required?: boolean;
+  unique?: boolean;
+  localized?: boolean;
 }
 
 export interface RelationField {
-  name: string
+  name: string;
+  type: string;
+  required?: boolean;
   relation: {
-    table: string
-    kind: 'one-to-one' | 'one-to-many' | 'many-to-one' | 'many-to-many'
-    onDelete?: 'cascade' | 'setNull' | 'restrict' | 'noAction' | 'setDefault'
-    onUpdate?: 'cascade' | 'setNull' | 'restrict' | 'noAction' | 'setDefault'
-    required?: boolean
-    populate?: boolean
+    table: string;
+    column: string;
+    kind: 'one-to-one' | 'many-to-one';
+    onDelete?: 'cascade' | 'setNull' | 'restrict' | 'noAction' | 'setDefault';
   }
 }
 
-export type FieldSchema = ColumnField | RelationField
+export type FieldSchema = ColumnField | RelationField;
 
 export interface TableSchema {
-  name: string
-  fields: FieldSchema[]
+  name: string;
+  fields: FieldSchema[];
 }
 
 export interface DBSchema {
-  tables: TableSchema[]
+  tables: TableSchema[];
+}
+
+export interface StorageFile {
+  alias: string;
+  extension?: string;
+  path?: string;
+  content?: Buffer;
 }
