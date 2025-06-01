@@ -1,0 +1,20 @@
+# table users will be created automatically, if auth.enable = true
+# localized values will be created automatically, if localization.enable = true
+# table media will be created automatically, if storage.enable = true
+
+tables:
+  - name: pages
+    fields:
+    - name: name
+      type: "VARCHAR(300)"
+      required: true
+      unique: true
+    - name: content
+      type: "TEXT"
+      required: true
+      localized: true
+    - name: author
+      relation:
+        table: "users"
+        kind: many-to-one
+        onDelete: setNull

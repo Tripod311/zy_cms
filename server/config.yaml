@@ -1,0 +1,31 @@
+storage:
+  enable: true
+  path: "./data/media"
+db:
+  type: "sqlite"
+  path: "./data/db.sqlite"
+  # host: "localhost"
+  # port: 8022
+  # user: "user"
+  # password: "password"
+  # database: "zcms"
+http:
+  admin_port: 8081
+  port: 8080
+  credentials: null
+  # credentials:
+  #   key: "path-to-key"
+  #   cert: "path-to-cert"
+  #   ca: "path-to-ca"
+  # cors:
+  #   - "http://localhost:8080"
+auth:
+  enable: true
+  jwt_secret: "jwt_secret"
+  cookie_secret: "cookie_secret"
+  roles:
+    - "admin"
+localization:
+  enable: true
+  locales: ["ru", "en"]
+  fallbackLocale: "en"

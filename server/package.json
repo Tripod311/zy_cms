@@ -1,0 +1,33 @@
+{
+  "name": "z_cms_server",
+  "version": "1.0.0",
+  "description": "Simple cms for simple services and websites",
+  "keywords": [
+    "fastify",
+    "sql",
+    "typescript"
+  ],
+  "license": "ISC",
+  "author": "Tripod ind.tripod@gmail.com",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.15.29",
+    "@types/pg": "^8.15.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "fastify": "^5.3.3",
+    "graphql": "^16.11.0",
+    "mysql2": "^3.14.1",
+    "pg": "^8.16.0",
+    "yaml": "^2.8.0"
+  }
+}
