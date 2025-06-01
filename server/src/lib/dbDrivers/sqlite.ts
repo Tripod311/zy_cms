@@ -13,6 +13,10 @@ class SqliteDriver implements DBDriver {
     this.db = new Database(options.path);
   }
 
+  async disconnect () {
+    this.db.close();
+  }
+
   async create<T = unknown>(table: string, data: Partial<T>, options?: CreateOptions): Promise<void> {
     const fields = Object.keys(data);
     const params = Object.values(data);

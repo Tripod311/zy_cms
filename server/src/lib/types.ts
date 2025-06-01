@@ -1,3 +1,13 @@
+import 'fastify';
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    user?: {
+      login: string;
+    };
+  }
+}
+
 export interface DBConfig {
   type: 'sqlite' | 'postgres' | 'mysql';
   path?: string;
@@ -11,12 +21,16 @@ export interface DBConfig {
 export interface HTTPConfig {
   admin_port: number;
   port: number;
+  cookie_secret?: string;
   credentials: null | {
     key: string;
     cert: string;
     ca?: string;
   }
-  cors?: string[];
+  cors?: {
+    origin: string[];
+    methods: string[];
+  }
 }
 
 export interface StorageConfig {
@@ -27,8 +41,7 @@ export interface StorageConfig {
 export interface AuthConfig {
   enable: boolean;
   jwt_secret?: string;
-  cookie_secret?: string;
-  roles?: string[];
+  secure_cookies?: boolean;
 }
 
 export interface LocalizationConfig {

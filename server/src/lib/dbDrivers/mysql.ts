@@ -9,6 +9,10 @@ class MysqlDriver implements DBDriver {
     this.connection = await mysql.createConnection(options);
   }
 
+  async disconnect () {
+    this.connection.end();
+  }
+
   async create<T = unknown>(table: string, data: Partial<T>): Promise<void> {
     const fields = Object.keys(data);
     const values = Object.values(data);

@@ -10,7 +10,7 @@ db:
   # password: "password"
   # database: "zcms"
 http:
-  admin_port: 8081
+  cookie_secret: "cookie_secret"
   port: 8080
   credentials: null
   # credentials:
@@ -18,13 +18,17 @@ http:
   #   cert: "path-to-cert"
   #   ca: "path-to-ca"
   # cors:
-  #   - "http://localhost:8080"
+  #   origin:
+  #     - "http://localhost:8080"
+  #   methods:
+  #     - GET
+  #     - POST
+  #     - PUT
+  #     - DELETE
 auth:
   enable: true
   jwt_secret: "jwt_secret"
-  cookie_secret: "cookie_secret"
-  roles:
-    - "admin"
+  secure_cookies: false
 localization:
   enable: true
   locales: ["ru", "en"]

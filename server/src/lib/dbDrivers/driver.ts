@@ -49,6 +49,7 @@ export interface DriverOptions {
 
 export interface DBDriver {
   connect(options: DriverOptions): Promise<void>;
+  disconnect(): Promise<void>;
 
   create<T = unknown>(table: string, data: Partial<T>, options?: CreateOptions): Promise<void>;
   read<T = unknown>(table: string, options?: ReadOptions): Promise<T[]>;

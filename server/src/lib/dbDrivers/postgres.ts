@@ -10,6 +10,10 @@ class PostgresDriver implements DBDriver {
     await this.client.connect();
   }
 
+  async disconnect () {
+    this.client.end();
+  }
+
   async create<T = unknown>(table: string, data: Partial<T>): Promise<void> {
     const fields = Object.keys(data);
     const values = Object.values(data);
