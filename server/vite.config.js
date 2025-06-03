@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { resolve } from 'path'
 
 export default defineConfig({
+  base: '/admin/',
   root: './admin_panel',
   plugins: [react(), tailwindcss()],
   build: {

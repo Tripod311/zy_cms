@@ -11,10 +11,10 @@ import AuthProvider from "./auth";
 import AdminPanel from "./admin";
 
 export default class Application {
-  public db: DBProvider | null = null;
+  public db!: DBProvider;
   public storage: StorageProvider | null = null;
   public auth: AuthProvider | null = null;
-  public api: FastifyInstance | null = null;
+  public api!: FastifyInstance;
   public locales: LocalizationProvider | null = null;
 
   public async setup () {
@@ -44,5 +44,14 @@ export default class Application {
     if (config.admin_panel) {
       await AdminPanel.setup();
     }
+  }
+
+  public async start () {
+    await APIProvider.start();
+  }
+
+  public async stop () {
+    await APIProvider.shutdown();
+    await DBProvider.getInstance().disconnect();
   }
 };

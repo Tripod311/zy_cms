@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
-import { DBDriver, CreateOptions, ReadOptions, UpdateOptions, DeleteOptions } from "./driver";
+import { DBDriver } from "./driver";
+import { CreateOptions, ReadOptions, UpdateOptions, DeleteOptions } from "../types";
 import { buildWhere, buildQueryTail } from './sqlConstructor';
 
 class MysqlDriver implements DBDriver {
@@ -27,11 +28,11 @@ class MysqlDriver implements DBDriver {
     await this.connection.execute(sql, values);
   }
 
-  async read<T = unknown>(table: string, options?: ReadOptions): Promise<T[]> {
+  async read<T = unknown>(table: string, options?: ReadOptions<T>): Promise<T[]> {
     let fieldsSql = '*';
 
     if (options?.fields) {
-      fieldsSql = options.fields.map(f => `\`${f}\``).join(', ');
+      fieldsSql = options.fields.map(f => `\`${f as string}\``).join(', ');
     }
 
     let whereSql = '';
@@ -48,7 +49,7 @@ class MysqlDriver implements DBDriver {
     return rows as T[];
   }
 
-  async update<T = unknown>(table: string, data: Partial<T>, options?: UpdateOptions): Promise<void> {
+  async update<T = unknown>(table: string, data: Partial<T>, options?: UpdateOptions<T>): Promise<void> {
     const fields = Object.keys(data);
     const values = Object.values(data);
 
@@ -71,7 +72,7 @@ class MysqlDriver implements DBDriver {
     await this.connection.execute(sql, [...values, ...whereParams]);
   }
 
-  async delete(table: string, options?: DeleteOptions): Promise<void> {
+  async delete<T = unknown>(table: string, options?: DeleteOptions<T>): Promise<void> {
     let whereSql = '';
     let whereParams: unknown[] = [];
 

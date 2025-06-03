@@ -1,7 +1,8 @@
 import { mkdirSync } from "fs";
 import path from "path";
 import Database, { Database as DatabaseType } from "better-sqlite3";
-import { DBDriver, CreateOptions, ReadOptions, UpdateOptions, DeleteOptions } from "./driver";
+import { DBDriver } from "./driver";
+import { CreateOptions, ReadOptions, UpdateOptions, DeleteOptions } from "../types";
 import { buildWhere, buildQueryTail } from "./sqlConstructor";
 
 class SqliteDriver implements DBDriver {
@@ -17,7 +18,7 @@ class SqliteDriver implements DBDriver {
     this.db.close();
   }
 
-  async create<T = unknown>(table: string, data: Partial<T>, options?: CreateOptions): Promise<void> {
+  async create<T = unknown>(table: string, data: Partial<T>, options?: CreateOptions<T>): Promise<void> {
     const fields = Object.keys(data);
     const params = Object.values(data);
 
@@ -32,7 +33,7 @@ class SqliteDriver implements DBDriver {
     const result = stmt.run(...params);
   }
 
-  async read<T = unknown>(table: string, options?: ReadOptions): Promise<T[]> {
+  async read<T = unknown>(table: string, options?: ReadOptions<T>): Promise<T[]> {
     let fieldsSql = "*";
 
     if (options?.fields) {
@@ -55,7 +56,7 @@ class SqliteDriver implements DBDriver {
     return result;
   }
 
-  async update<T = unknown>(table: string, data: Partial<T>, options?: UpdateOptions): Promise<void> {
+  async update<T = unknown>(table: string, data: Partial<T>, options?: UpdateOptions<T>): Promise<void> {
     const fields = Object.keys(data);
     const params = Object.values(data);
 
@@ -80,7 +81,7 @@ class SqliteDriver implements DBDriver {
     const result = stmt.run(...params, ...whereParams);
   }
 
-  async delete(table: string, options?: DeleteOptions): Promise<void> {
+  async delete<T = unknown>(table: string, options?: DeleteOptions<T>): Promise<void> {
     let whereSql = "";
     let whereParams: unknown[] = [];
 

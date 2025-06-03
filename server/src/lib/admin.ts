@@ -7,21 +7,22 @@ import AuthProvider from "./auth";
 import DBProvider from "./db";
 import LocalizationProvider from "./localization";
 
+import { User, CreateOptions, ReadOptions, UpdateOptions, DeleteOptions } from "./types";
+
 export default class AdminPanel {
   public static async setup () {
     const app = APIProvider.getInstance();
 
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
     await app.register(FastifyStatic, {
-      root: path.join(__dirname, "admin_panel_dist"),
-      prefix: "/admin"
+      root: path.resolve("./admin_panel_dist/"),
+      prefix: "/admin",
+      index: ["index.html"]
     });
 
     // create first user
-    app.post("/admin/api/hasRoot", {
+    app.get("/admin/api/hasRoot", {
       handler: (request, reply) => {
-        return existsSync("./firstLaunch");
+        return !existsSync("./firstLaunch");
       }
     });
 
@@ -29,9 +30,9 @@ export default class AdminPanel {
       handler: async (request, reply) => {
         if (existsSync("./firstLaunch")) {
           try {
-            const body = request.body as {login: string, password: string};
+            const body = request.body as User;
 
-            await AuthProvider.getInstance().create(body.login, body.password);
+            await AuthProvider.getInstance().create(body.login, body.password as string);
             unlinkSync("./firstLaunch");
 
             reply.send({ error: null });
@@ -48,12 +49,158 @@ export default class AdminPanel {
       }
     });
 
-    // authorize
+    // authorize and verify
     app.post("/admin/api/authorize", {
       handler: async (request, reply) => {
         await AuthProvider.getInstance().authorize(request, reply);
 
         reply.send({ error: null });
+      }
+    });
+
+    app.get("/admin/api/verify", {
+      preHandler: [AuthProvider.getInstance().checkAuth],
+      handler: (request, reply) => {
+        if (request.user) {
+          reply.send({ error: null });
+        } else {
+          reply.send({ error: "Token expired" });
+        }
+      }
+    });
+
+    // users
+    app.get("/admin/api/users", {
+      preHandler: [AuthProvider.getInstance().forceAuth],
+      handler: async (request, reply) => {
+        reply.send(await DBProvider.getInstance().read<User>('users', { fields: DBProvider.fieldsOf<User>('login') }));
+      }
+    });
+
+    app.post("/admin/api/users", {
+      preHandler: [AuthProvider.getInstance().forceAuth],
+      handler: async (request, reply) => {
+        const body = request.body as User;
+
+        await AuthProvider.getInstance().create(body.login, body.password as string);
+
+        reply.send({ error: false });
+      }
+    });
+
+    app.put("/admin/api/users/:login", {
+      preHandler: [AuthProvider.getInstance().forceAuth],
+      handler: async (request, reply) => {
+        const { login } = request.params as User;
+        const { password } = request.body as { password: string; };
+
+        await AuthProvider.getInstance().update(login, password);
+
+        reply.send({ error: false });
+      }
+    });
+
+    app.delete("/admin/api/users/:login", {
+      preHandler: [AuthProvider.getInstance().forceAuth],
+      handler: async (request, reply) => {
+        const { login } = request.params as User;
+
+        if (login === request.user?.login) {
+          reply.status(500).send({
+            error: "User can't delete himself"
+          });
+        } else {
+          await AuthProvider.getInstance().delete(login);
+
+          reply.send({ error: false });
+        }
+      }
+    });
+
+    // data manipulations
+    app.get("/admin/api/schema", {
+      preHandler: [AuthProvider.getInstance().forceAuth],
+      handler: async (request, reply) => {
+        reply.send(DBProvider.getInstance().schema);
+      }
+    });
+
+    app.get("/admin/api/:table", {
+      preHandler: [AuthProvider.getInstance().forceAuth],
+      handler: async (request, reply) => {
+        const { table } = request.params as { table: string; };
+        const schema = DBProvider.getInstance().schema;
+        const readOptions = request.body as ReadOptions;
+
+        if (!(table in schema)) {
+          reply.status(500).send({
+            error: `Unknown table ${table}`
+          });
+        } else {
+          reply.send({
+            error: false,
+            data: await DBProvider.getInstance().read(table, readOptions)
+          });
+        }
+      }
+    });
+
+    app.post("/admin/api/:table", {
+      preHandler: [AuthProvider.getInstance().forceAuth],
+      handler: async (request, reply) => {
+        const { table } = request.params as { table: string; };
+        const schema = DBProvider.getInstance().schema;
+
+        if (!(table in schema)) {
+          reply.status(500).send({
+            error: `Unknown table ${table}`
+          });
+        } else {
+          await DBProvider.getInstance().create(table, request.body as Partial<unknown>);
+          reply.send({
+            error: false
+          });
+        }
+      }
+    });
+
+    app.put("/admin/api/:table", {
+      preHandler: [AuthProvider.getInstance().forceAuth],
+      handler: async (request, reply) => {
+        const { table } = request.params as { table: string; };
+        const schema = DBProvider.getInstance().schema;
+        const { options, data } = request.body as { options: UpdateOptions; data: Partial<unknown>; }
+
+        if (!(table in schema)) {
+          reply.status(500).send({
+            error: `Unknown table ${table}`
+          });
+        } else {
+          await DBProvider.getInstance().update(table, data, options);
+          reply.send({
+            error: false
+          });
+        }
+      }
+    });
+
+    app.delete("/admin/api/:table/:id", {
+      preHandler: [AuthProvider.getInstance().forceAuth],
+      handler: async (request, reply) => {
+        const { table } = request.params as { table: string; };
+        const schema = DBProvider.getInstance().schema;
+        const options = request.body as DeleteOptions;
+
+        if (!(table in schema)) {
+          reply.status(500).send({
+            error: `Unknown table ${table}`
+          });
+        } else {
+          await DBProvider.getInstance().delete(table, options);
+          reply.send({
+            error: false
+          });
+        }
       }
     });
   }

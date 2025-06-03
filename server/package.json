@@ -14,6 +14,7 @@
   "main": "index.js",
   "scripts": {
     "build:server": "tsc -p tsconfig-server.json && node ./fixPaths.js",
+    "rebuild:server": "rm -rf dist && npm run build:server",
     "build:admin": "vite build",
     "build": "npm run build:server && npm run build:admin",
     "clean": "rm -rf dist && rm -rf admin_panel_dist",
@@ -38,6 +39,7 @@
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.0.1",
+    "@fastify/multipart": "^9.0.3",
     "@fastify/static": "^8.2.0",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^11.10.0",

@@ -1,4 +1,4 @@
-import { WhereFilter, Operator, ReadOptions } from "./driver"
+import { WhereFilter, Operator, ReadOptions } from "../types"
 
 export function buildWhere<T = unknown>(filter: WhereFilter<T>): { sql: string, params: unknown[] } {
   const clauses: string[] = [];
@@ -78,11 +78,15 @@ export function buildWhere<T = unknown>(filter: WhereFilter<T>): { sql: string, 
   return { sql, params };
 }
 
-export function buildQueryTail(options?: Partial<Pick<ReadOptions, 'orderBy' | 'limit' | 'offset'>>): string {
+export function buildQueryTail<T = unknown>(options?: Partial<Pick<ReadOptions<T>, 'orderBy' | 'limit' | 'offset'>>): string {
   let sql = '';
 
   if (options?.orderBy) {
-    sql += ` ORDER BY ${options.orderBy.join(', ')}`;
+    if (Array.isArray(options.orderBy)) {
+      sql += ` ORDER BY ${options.orderBy.join(', ')}`;
+    } else {
+      sql += ` ORDER BY ${options.orderBy as string}`;
+    }
   }
 
   if (typeof options?.limit === 'number') {

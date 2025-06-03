@@ -97,3 +97,56 @@ export interface StorageFile {
   path?: string;
   content?: Buffer;
 }
+
+export interface User {
+  login: string;
+  password?: string;
+}
+
+export type DBJSType = 'string' | 'number' | 'Uint8Array' | 'boolean';
+export type DBTableObject = Record<string, {
+  defaultType: string;
+  type: DBJSType;
+}>;
+export type DBSchemaObject = Record<string, DBTableObject>;
+
+// database types
+
+export type Operator<T> = {
+  $eq?: T;
+  $ne?: T;
+  $in?: T[];
+  $nin?: T[];
+  $gt?: T;
+  $gte?: T;
+  $lt?: T;
+  $lte?: T;
+  $like?: string;
+}
+
+export type WhereFilter<T> = {
+  [K in keyof T]?: T[K] | Operator<T>;
+}
+
+export interface CreateOptions<T = unknown> {
+  returning?: boolean;
+}
+
+type OrderByType<T> = keyof T | `${Extract<keyof T, string>} ASC` | `${Extract<keyof T, string>} DESC`;
+
+export interface ReadOptions<T = unknown> {
+  where?: Partial<T> | WhereFilter<T>;
+  fields?: (keyof T)[];
+  orderBy?: OrderByType<T> | OrderByType<T>[];
+  limit?: number;
+  offset?: number;
+}
+
+export interface UpdateOptions<T = unknown> {
+  returning?: boolean;
+  where?: Partial<T> | WhereFilter<T>;
+}
+
+export interface DeleteOptions<T = unknown> {
+  where?: Partial<T> | WhereFilter<T>;
+}

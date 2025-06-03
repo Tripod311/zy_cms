@@ -1,9 +1,9 @@
 import { readFileSync } from "fs"
 import yaml from "yaml";
-import { DBConfig, DBSchema, FieldSchema, ColumnField, RelationField } from "./types";
+import { DBConfig, DBSchema, FieldSchema, ColumnField, RelationField, DBSchemaObject, DBTableObject, DBJSType, CreateOptions, ReadOptions, UpdateOptions, DeleteOptions } from "./types";
 import LocalizationProvider from "./localization";
 
-import { DBDriver, CreateOptions, ReadOptions, UpdateOptions, DeleteOptions } from "./dbDrivers/driver";
+import { DBDriver } from "./dbDrivers/driver";
 import SqliteDriver from "./dbDrivers/sqlite";
 import MysqlDriver from "./dbDrivers/mysql";
 import PostgresDriver from "./dbDrivers/postgres";
@@ -11,7 +11,7 @@ import PostgresDriver from "./dbDrivers/postgres";
 class DBProvider {
   private static instance: DBProvider;
   private driver: DBDriver;
-  public schema!: DBSchema;
+  public schema!: DBSchemaObject;
 
   private constructor (driver: DBDriver) {
     this.driver = driver;
@@ -43,17 +43,16 @@ class DBProvider {
     }
 
     DBProvider.instance = new DBProvider(driver);
-    const raw = readFileSync('./schema.yaml', 'utf8');
-    const schema = yaml.parse(raw) as DBSchema;
-    DBProvider.instance.schema = schema;
   }
 
   public static async buildSchema () {
-    const schema = DBProvider.instance.schema;
+    const raw = readFileSync('./schema.yaml', 'utf8');
+    const schema = yaml.parse(raw) as DBSchema;
     
     interface TableDescription {name: string; sql: string; relations: Set<string>;};
 
     let tableSchema: TableDescription[] = [];
+    let inSchema: DBSchemaObject = {};
 
     for (let i=0; i<schema.tables.length; i++) {
       const name = schema.tables[i].name;
@@ -61,7 +60,14 @@ class DBProvider {
       let relations: Set<string> = new Set();
       let fields: string[] = [];
 
+      inSchema[name] = {};
+
       schema.tables[i].fields.map((f: FieldSchema) => {
+        inSchema[name][f.name] = {
+          defaultType: f.type,
+          type: DBProvider.convertType(f.type)
+        };
+
         if ('relation' in f) {
           let onDeleteClause: string = "";
 
@@ -131,21 +137,63 @@ class DBProvider {
         tableSchema[i].relations.delete(selectedTable.name);
       }
     }
+
+    DBProvider.instance.schema = inSchema;
   }
 
-  async create<T = unknown>(table: string, data: Partial<T>, options?: CreateOptions): Promise<void> {
+  public static fieldsOf<T>(...keys: (keyof T)[]): (keyof T)[] {
+    return keys;
+  }
+
+  private static convertType (sqlType: string): DBJSType {
+    sqlType = sqlType.toLowerCase();
+
+    if (sqlType.startsWith("varchar")) return "string";
+
+    if (sqlType.startsWith("binary") || sqlType.startsWith("varbinary")) return "Uint8Array";
+
+    if (sqlType.startsWith("decimal") || sqlType.startsWith("numeric")) return "string";
+
+    if (sqlType.startsWith("float") || sqlType.startsWith("double") || sqlType.startsWith("tinyint")) return "number";
+
+    switch (sqlType) {
+      case "integer":
+      case "int":
+      case "smallint":
+      case "mediumint":
+      case "bigint":
+      case "real":
+        return "number";
+      case "blob":
+      case "tinyblob":
+      case "mediumblob":
+      case "longblob":
+        return "Uint8Array";
+      case "bool":
+      case "boolean":
+        return "boolean";
+      default:
+        return "string";
+    }
+  }
+
+  public async disconnect () {
+    await this.driver.disconnect();
+  }
+
+  async create<T = unknown>(table: string, data: Partial<T>, options?: CreateOptions<T>): Promise<void> {
     await this.driver.create<T>(table, data, options);
   }
 
-  async read<T = unknown>(table: string, options?: ReadOptions): Promise<T[]> {
+  async read<T = unknown>(table: string, options?: ReadOptions<T>): Promise<T[]> {
     return this.driver.read<T>(table, options);
   }
 
-  async update<T = unknown>(table: string, data: Partial<T>, options?: UpdateOptions): Promise<void> {
+  async update<T = unknown>(table: string, data: Partial<T>, options?: UpdateOptions<T>): Promise<void> {
     await this.driver.update<T>(table, data, options);
   }
 
-  async delete(table: string, options?: DeleteOptions): Promise<void> {
+  async delete<T = unknown>(table: string, options?: DeleteOptions<T>): Promise<void> {
     await this.driver.delete(table, options);
   }
 

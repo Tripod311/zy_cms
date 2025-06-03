@@ -1,9 +1,10 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { AuthConfig } from "./types";
 import DBProvider from "./db";
 import APIProvider from "./api";
+
+import { AuthConfig, User } from "./types";
 
 export default class AuthProvider {
   private static instance: AuthProvider;
@@ -27,11 +28,16 @@ export default class AuthProvider {
 
   public async create (login: string, password: string) {
     const hash = await bcrypt.hash(password, 10);
-    await DBProvider.getInstance().create("users", {login: login, password: hash});
+    await DBProvider.getInstance().create<User>("users", {login: login, password: hash});
+  }
+
+  public async update (login: string, password: string) {
+    const hash = await bcrypt.hash(password, 10);
+    await DBProvider.getInstance().update<User>("users", { password: hash }, { where: { login: login }});
   }
 
   public async delete (login: string) {
-    await DBProvider.getInstance().delete("users", {where: {login}});
+    await DBProvider.getInstance().delete<User>("users", {where: {login}});
   }
 
   public async forceAuth(request: FastifyRequest, reply: FastifyReply) {
@@ -112,14 +118,14 @@ export default class AuthProvider {
   public async authorize (request: FastifyRequest, reply: FastifyReply) {
     const body = request.body as { login: string; password: string; };
 
-    const rows: {login: string; password: string}[] = await DBProvider.getInstance().read("users", {where: {login: body.login}});
+    const rows = await DBProvider.getInstance().read<User>("users", {where: {login: body.login}});
 
     if (rows.length === 0) {
       reply.status(403).send({ error: 'User not found' });
       return;
     }
 
-    const compareResult = await bcrypt.compare(body.password, rows[0].password);
+    const compareResult = await bcrypt.compare(body.password as string, rows[0].password as string);
 
     if (compareResult) {
       const newToken = jwt.sign(
