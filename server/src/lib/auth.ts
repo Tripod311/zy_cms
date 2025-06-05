@@ -10,6 +10,7 @@ export default class AuthProvider {
   private static instance: AuthProvider;
   private jwt_secret: string = "jwt_secret";
   private secure_cookies: boolean = true;
+  public handlers: Record<string, (request: FastifyRequest, reply: FastifyReply) => Promise<void>> = {};
 
   public static getInstance(): AuthProvider {
     return AuthProvider.instance;
@@ -24,6 +25,11 @@ export default class AuthProvider {
       login VARCHAR(255) PRIMARY KEY,
       password CHAR(60) NOT NULL
     )`);
+  }
+
+  private constructor () {
+    this.handlers.checkAuth = this.checkAuth.bind(this);
+    this.handlers.forceAuth = this.forceAuth.bind(this);
   }
 
   public async create (login: string, password: string) {
@@ -44,7 +50,7 @@ export default class AuthProvider {
     const token = request.cookies?.token;
 
     if (!token) {
-      reply.status(403).send({ error: 'Forbidden: no token' });
+      reply.code(403).send({ error: 'Forbidden: no token' });
       return;
     }
 
@@ -73,7 +79,7 @@ export default class AuthProvider {
         login: decoded.login
       };
     } catch (e) {
-      reply.status(403).send({ error: 'Forbidden: invalid token' });
+      reply.code(403).send({ error: 'Forbidden: invalid token' });
     }
   }
 
@@ -121,7 +127,7 @@ export default class AuthProvider {
     const rows = await DBProvider.getInstance().read<User>("users", {where: {login: body.login}});
 
     if (rows.length === 0) {
-      reply.status(403).send({ error: 'User not found' });
+      reply.code(403).send({ error: 'User not found' });
       return;
     }
 
@@ -141,7 +147,7 @@ export default class AuthProvider {
         path: '/',
       });
     } else {
-      reply.status(403).send({ error: 'Invalid login/password pair' });
+      reply.code(403).send({ error: 'Invalid login/password pair' });
     }
   }
 }

@@ -52,7 +52,7 @@ export default class APIProvider {
     APIProvider.port = config.port;
 
     APIProvider.instance.setErrorHandler((error, request, reply) => {
-      reply.status(500).send({
+      reply.code(500).send({
         error: error.message,
       });
     });

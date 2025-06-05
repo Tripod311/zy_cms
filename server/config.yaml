@@ -2,6 +2,7 @@ admin_panel: true
 storage:
   enable: true
   path: "./data/media"
+  publicGET: true
 db:
   type: "sqlite"
   path: "./data/db.sqlite"
@@ -9,7 +10,7 @@ db:
   # port: 8022
   # user: "user"
   # password: "password"
-  # database: "zcms"
+  # database: "zycms"
 http:
   cookie_secret: "cookie_secret"
   port: 8080

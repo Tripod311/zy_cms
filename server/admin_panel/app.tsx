@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Spinner from "./components/spinner";
 import FirstLaunch from "./components/firstLaunch";
 import LoginForm from "./components/loginForm";
+import Dashboard from "./components/dashboard";
 
 type AppState = "loading" | "firstLaunch" | "unauth" | "auth";
 
@@ -42,6 +43,6 @@ export default function Application () {
 		case "unauth":
 			return <LoginForm onAuthorized={() => {setState("auth")}} />;
 		case "auth":
-			return <div>Auth</div>;
+			return <Dashboard />;
 	}
 }

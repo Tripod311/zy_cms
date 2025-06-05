@@ -36,6 +36,7 @@ export interface HTTPConfig {
 export interface StorageConfig {
   enable: boolean;
   path?: string;
+  publicGET?: boolean;
 }
 
 export interface AuthConfig {
@@ -103,7 +104,7 @@ export interface User {
   password?: string;
 }
 
-export type DBJSType = 'string' | 'number' | 'Uint8Array' | 'boolean';
+export type DBJSType = 'string' | 'richText' | 'number' | 'Uint8Array' | 'boolean';
 export type DBTableObject = Record<string, {
   defaultType: string;
   type: DBJSType;

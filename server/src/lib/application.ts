@@ -32,7 +32,7 @@ export default class Application {
     this.api = APIProvider.getInstance();
 
     if (config.storage.enable) {
-      StorageProvider.setup(config.storage.path as string);
+      StorageProvider.setup(config.storage);
       this.storage = StorageProvider.getInstance();
     }
 
@@ -40,6 +40,8 @@ export default class Application {
       AuthProvider.setup(config.auth);
       this.auth = AuthProvider.getInstance();
     }
+
+    await DBProvider.buildSchema(config.storage.enable, config.auth.enable);
 
     if (config.admin_panel) {
       await AdminPanel.setup();

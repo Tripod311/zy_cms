@@ -38,13 +38,13 @@ export default class AdminPanel {
             reply.send({ error: null });
           } catch (e) {
             if (e instanceof Error) {
-              reply.status(500).send({ error: e.toString() });
+              reply.code(500).send({ error: e.toString() });
             } else {
-              reply.status(500).send({ error: "Unknown error" });
+              reply.code(500).send({ error: "Unknown error" });
             }
           }
         } else {
-          reply.status(403).send({ error: "Not allowed" });
+          reply.code(403).send({ error: "Not allowed" });
         }
       }
     });
@@ -59,7 +59,7 @@ export default class AdminPanel {
     });
 
     app.get("/admin/api/verify", {
-      preHandler: [AuthProvider.getInstance().checkAuth],
+      preHandler: [AuthProvider.getInstance().handlers.checkAuth],
       handler: (request, reply) => {
         if (request.user) {
           reply.send({ error: null });
@@ -71,14 +71,14 @@ export default class AdminPanel {
 
     // users
     app.get("/admin/api/users", {
-      preHandler: [AuthProvider.getInstance().forceAuth],
+      preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         reply.send(await DBProvider.getInstance().read<User>('users', { fields: DBProvider.fieldsOf<User>('login') }));
       }
     });
 
     app.post("/admin/api/users", {
-      preHandler: [AuthProvider.getInstance().forceAuth],
+      preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         const body = request.body as User;
 
@@ -89,7 +89,7 @@ export default class AdminPanel {
     });
 
     app.put("/admin/api/users/:login", {
-      preHandler: [AuthProvider.getInstance().forceAuth],
+      preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         const { login } = request.params as User;
         const { password } = request.body as { password: string; };
@@ -101,12 +101,12 @@ export default class AdminPanel {
     });
 
     app.delete("/admin/api/users/:login", {
-      preHandler: [AuthProvider.getInstance().forceAuth],
+      preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         const { login } = request.params as User;
 
         if (login === request.user?.login) {
-          reply.status(500).send({
+          reply.code(500).send({
             error: "User can't delete himself"
           });
         } else {
@@ -119,21 +119,21 @@ export default class AdminPanel {
 
     // data manipulations
     app.get("/admin/api/schema", {
-      preHandler: [AuthProvider.getInstance().forceAuth],
+      preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         reply.send(DBProvider.getInstance().schema);
       }
     });
 
     app.get("/admin/api/:table", {
-      preHandler: [AuthProvider.getInstance().forceAuth],
+      preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         const { table } = request.params as { table: string; };
         const schema = DBProvider.getInstance().schema;
         const readOptions = request.body as ReadOptions;
 
         if (!(table in schema)) {
-          reply.status(500).send({
+          reply.code(500).send({
             error: `Unknown table ${table}`
           });
         } else {
@@ -146,13 +146,13 @@ export default class AdminPanel {
     });
 
     app.post("/admin/api/:table", {
-      preHandler: [AuthProvider.getInstance().forceAuth],
+      preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         const { table } = request.params as { table: string; };
         const schema = DBProvider.getInstance().schema;
 
         if (!(table in schema)) {
-          reply.status(500).send({
+          reply.code(500).send({
             error: `Unknown table ${table}`
           });
         } else {
@@ -165,14 +165,14 @@ export default class AdminPanel {
     });
 
     app.put("/admin/api/:table", {
-      preHandler: [AuthProvider.getInstance().forceAuth],
+      preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         const { table } = request.params as { table: string; };
         const schema = DBProvider.getInstance().schema;
         const { options, data } = request.body as { options: UpdateOptions; data: Partial<unknown>; }
 
         if (!(table in schema)) {
-          reply.status(500).send({
+          reply.code(500).send({
             error: `Unknown table ${table}`
           });
         } else {
@@ -185,14 +185,14 @@ export default class AdminPanel {
     });
 
     app.delete("/admin/api/:table/:id", {
-      preHandler: [AuthProvider.getInstance().forceAuth],
+      preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         const { table } = request.params as { table: string; };
         const schema = DBProvider.getInstance().schema;
         const options = request.body as DeleteOptions;
 
         if (!(table in schema)) {
-          reply.status(500).send({
+          reply.code(500).send({
             error: `Unknown table ${table}`
           });
         } else {

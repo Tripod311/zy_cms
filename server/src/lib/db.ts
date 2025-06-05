@@ -45,7 +45,7 @@ class DBProvider {
     DBProvider.instance = new DBProvider(driver);
   }
 
-  public static async buildSchema () {
+  public static async buildSchema (storageEnabled: boolean, authEnabled: boolean) {
     const raw = readFileSync('./schema.yaml', 'utf8');
     const schema = yaml.parse(raw) as DBSchema;
     
@@ -64,7 +64,7 @@ class DBProvider {
 
       schema.tables[i].fields.map((f: FieldSchema) => {
         inSchema[name][f.name] = {
-          defaultType: f.type,
+          defaultType: f.type === "richText" ? "LONGTEXT" : f.type,
           type: DBProvider.convertType(f.type)
         };
 
@@ -91,21 +91,24 @@ class DBProvider {
 
           switch (f.relation.kind) {
             case "one-to-one":
-              fields.push(`${f.name} ${f.type} UNIQUE REFERENCES ${f.relation.table}(${f.relation.column}) ${f.required ? "NOT NULL" : ""} ${onDeleteClause}`);
+              fields.push(`${f.name} ${inSchema[name][f.name].defaultType} UNIQUE REFERENCES ${f.relation.table}(${f.relation.column}) ${f.required ? "NOT NULL" : ""} ${onDeleteClause}`);
               break;
             case "many-to-one":
-              fields.push(`${f.name} ${f.type} REFERENCES ${f.relation.table}(${f.relation.column}) ${f.required ? "NOT NULL" : ""} ${onDeleteClause}`);
+              fields.push(`${f.name} ${inSchema[name][f.name].defaultType} REFERENCES ${f.relation.table}(${f.relation.column}) ${f.required ? "NOT NULL" : ""} ${onDeleteClause}`);
               break;
           }
 
-          relations.add(f.relation.table);
+          const isStorageRef = storageEnabled && f.relation.table === "media";
+          const isUsersRef = authEnabled && f.relation.table === "users";
+
+          if (!(isStorageRef || isUsersRef)) relations.add(f.relation.table);
         } else {
           if (f.localized) {
             for (let locale of LocalizationProvider.getInstance().locales) {
-              fields.push(`${f.name}.${locale} ${f.type} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
+              fields.push(`${f.name}_${locale} ${inSchema[name][f.name].defaultType} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
             }
           } else {
-            fields.push(`${f.name} ${f.type} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
+            fields.push(`${f.name} ${inSchema[name][f.name].defaultType} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
           }
         }
       });
@@ -147,6 +150,8 @@ class DBProvider {
 
   private static convertType (sqlType: string): DBJSType {
     sqlType = sqlType.toLowerCase();
+
+    if (sqlType.startsWith("richtext")) return "richText";
 
     if (sqlType.startsWith("varchar")) return "string";
 
