@@ -17,5 +17,6 @@ tables:
       type: "VARCHAR(255)"
       relation:
         table: "users"
+        column: "login"
         kind: many-to-one
         onDelete: setNull

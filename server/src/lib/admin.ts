@@ -58,6 +58,14 @@ export default class AdminPanel {
       }
     });
 
+    app.post("/admin/api/logout", {
+      handler: async (request, reply) => {
+        AuthProvider.getInstance().logout(request, reply);
+
+        reply.send({ error: null });
+      }
+    });
+
     app.get("/admin/api/verify", {
       preHandler: [AuthProvider.getInstance().handlers.checkAuth],
       handler: (request, reply) => {
@@ -70,14 +78,18 @@ export default class AdminPanel {
     });
 
     // users
-    app.get("/admin/api/users", {
+    app.post("/admin/api/users", {
       preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
-        reply.send(await DBProvider.getInstance().read<User>('users', { fields: DBProvider.fieldsOf<User>('login') }));
+        const rows = await DBProvider.getInstance().read<User>('users', request.body as ReadOptions);
+        reply.send({
+          error: false,
+          rows: rows
+        });
       }
     });
 
-    app.post("/admin/api/users", {
+    app.post("/admin/api/users/new", {
       preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         const body = request.body as User;
@@ -125,7 +137,8 @@ export default class AdminPanel {
       }
     });
 
-    app.get("/admin/api/:table", {
+    // using post here, because
+    app.post("/admin/api/:table", {
       preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         const { table } = request.params as { table: string; };
@@ -139,13 +152,13 @@ export default class AdminPanel {
         } else {
           reply.send({
             error: false,
-            data: await DBProvider.getInstance().read(table, readOptions)
+            rows: await DBProvider.getInstance().read(table, readOptions)
           });
         }
       }
     });
 
-    app.post("/admin/api/:table", {
+    app.post("/admin/api/:table/new", {
       preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         const { table } = request.params as { table: string; };
@@ -184,7 +197,7 @@ export default class AdminPanel {
       }
     });
 
-    app.delete("/admin/api/:table/:id", {
+    app.delete("/admin/api/:table", {
       preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
         const { table } = request.params as { table: string; };

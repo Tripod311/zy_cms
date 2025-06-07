@@ -31,14 +31,14 @@ export default class Application {
     await APIProvider.setup(config.http);
     this.api = APIProvider.getInstance();
 
-    if (config.storage.enable) {
-      StorageProvider.setup(config.storage);
-      this.storage = StorageProvider.getInstance();
-    }
-
     if (config.auth.enable) {
-      AuthProvider.setup(config.auth);
+      await AuthProvider.setup(config.auth);
       this.auth = AuthProvider.getInstance();
+    }
+    
+    if (config.storage.enable) {
+      await StorageProvider.setup(config.storage);
+      this.storage = StorageProvider.getInstance();
     }
 
     await DBProvider.buildSchema(config.storage.enable, config.auth.enable);

@@ -1,5 +1,5 @@
 import mysql from 'mysql2/promise';
-import { DBDriver } from "./driver";
+import { DBDriver, CreateTableOptions } from "./driver";
 import { CreateOptions, ReadOptions, UpdateOptions, DeleteOptions } from "../types";
 import { buildWhere, buildQueryTail } from './sqlConstructor';
 
@@ -93,6 +93,11 @@ class MysqlDriver implements DBDriver {
   async queryWithResult<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> {
     const [rows] = await this.connection.execute(sql, params);
     return rows as T[];
+  }
+
+  async createTable(options: CreateTableOptions): Promise<void> {
+    const fieldsSql = "id INT PRIMARY KEY AUTO_INCREMENT, " + options.fields.join(', ');
+    await this.connection.execute(`CREATE TABLE IF NOT EXISTS ${options.name} (${fieldsSql})`);
   }
 }
 

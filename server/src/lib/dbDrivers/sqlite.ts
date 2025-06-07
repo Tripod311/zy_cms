@@ -1,7 +1,7 @@
 import { mkdirSync } from "fs";
 import path from "path";
 import Database, { Database as DatabaseType } from "better-sqlite3";
-import { DBDriver } from "./driver";
+import { DBDriver, CreateTableOptions } from "./driver";
 import { CreateOptions, ReadOptions, UpdateOptions, DeleteOptions } from "../types";
 import { buildWhere, buildQueryTail } from "./sqlConstructor";
 
@@ -115,6 +115,12 @@ class SqliteDriver implements DBDriver {
       const result = stmt.all() as T[];
       return result;
     }
+  }
+
+  async createTable(options: CreateTableOptions): Promise<void> {
+    const fieldsSql = "id INTEGER PRIMARY KEY AUTOINCREMENT, " + options.fields.join(', ');
+    const stmt = this.db.prepare(`CREATE TABLE IF NOT EXISTS ${options.name} (${fieldsSql})`);
+    stmt.run();
   }
 }
 

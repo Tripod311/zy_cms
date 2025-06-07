@@ -9,6 +9,11 @@ export interface DriverOptions {
   database?: string;
 }
 
+export interface CreateTableOptions {
+  name: string;
+  fields: string[];
+}
+
 export interface DBDriver {
   connect(options: DriverOptions): Promise<void>;
   disconnect(): Promise<void>;
@@ -18,6 +23,7 @@ export interface DBDriver {
   update<T = unknown>(table: string, data: Partial<T>, options?: UpdateOptions<T>): Promise<void>;
   delete<T = unknown>(table: string, options?: DeleteOptions<T>): Promise<void>;
 
+  createTable(options: CreateTableOptions): Promise<void>;
   query<T = unknown>(sql: string, params?: unknown[]): Promise<void>;
   queryWithResult<T = unknown>(sql: string, params?: unknown[]): Promise<T[]>;
 }

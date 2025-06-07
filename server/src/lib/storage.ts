@@ -14,10 +14,27 @@ export default class StorageProvider {
   public static async setup(config: StorageConfig) {
     StorageProvider.instance = new StorageProvider(config.path as string);
 
-    await DBProvider.getInstance().query(`CREATE TABLE IF NOT EXISTS media (
-      alias VARCHAR(512) PRIMARY KEY,
-      path VARCHAR(512)
-    )`);
+    await DBProvider.getInstance().createTable({
+      name: "media",
+      fields: [
+        "alias VARCHAR(512) UNIQUE",
+        "path VARCHAR(512)"
+      ]
+    });
+    DBProvider.extendSchema("media", {
+      id: {
+        defaultType: "INTEGER",
+        type: "number"
+      },
+      alias: {
+        defaultType: "VARCHAR(512)",
+        type: "string"
+      },
+      path: {
+        defaultType: "VARCHAR(512)",
+        type: "string"
+      }
+    });
 
     const app = APIProvider.getInstance();
 

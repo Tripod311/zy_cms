@@ -3,7 +3,7 @@ import yaml from "yaml";
 import { DBConfig, DBSchema, FieldSchema, ColumnField, RelationField, DBSchemaObject, DBTableObject, DBJSType, CreateOptions, ReadOptions, UpdateOptions, DeleteOptions } from "./types";
 import LocalizationProvider from "./localization";
 
-import { DBDriver } from "./dbDrivers/driver";
+import { DBDriver, CreateTableOptions } from "./dbDrivers/driver";
 import SqliteDriver from "./dbDrivers/sqlite";
 import MysqlDriver from "./dbDrivers/mysql";
 import PostgresDriver from "./dbDrivers/postgres";
@@ -11,7 +11,7 @@ import PostgresDriver from "./dbDrivers/postgres";
 class DBProvider {
   private static instance: DBProvider;
   private driver: DBDriver;
-  public schema!: DBSchemaObject;
+  public schema: DBSchemaObject = {};
 
   private constructor (driver: DBDriver) {
     this.driver = driver;
@@ -49,10 +49,9 @@ class DBProvider {
     const raw = readFileSync('./schema.yaml', 'utf8');
     const schema = yaml.parse(raw) as DBSchema;
     
-    interface TableDescription {name: string; sql: string; relations: Set<string>;};
+    interface TableDescription {name: string; fields: string[]; relations: Set<string>;};
 
     let tableSchema: TableDescription[] = [];
-    let inSchema: DBSchemaObject = {};
 
     for (let i=0; i<schema.tables.length; i++) {
       const name = schema.tables[i].name;
@@ -60,15 +59,40 @@ class DBProvider {
       let relations: Set<string> = new Set();
       let fields: string[] = [];
 
-      inSchema[name] = {};
+      let tSchema: DBTableObject = {
+        id: {
+          defaultType: "INTEGER",
+          type: "number"
+        }
+      };
+
+      const addField = (name: string, type: string) => {
+        switch (type) {
+          case "richText":
+            tSchema[name] = {
+              defaultType: "LONGTEXT",
+              type: DBProvider.convertType(type)
+            };
+            break;
+          case "datetime":
+            tSchema[name] = {
+              defaultType: "VARCHAR(30)",
+              type: DBProvider.convertType(type)
+            };
+            break;
+          default:
+            tSchema[name] = {
+              defaultType: type,
+              type: DBProvider.convertType(type)
+            };
+            break;
+        }
+      }
 
       schema.tables[i].fields.map((f: FieldSchema) => {
-        inSchema[name][f.name] = {
-          defaultType: f.type === "richText" ? "LONGTEXT" : f.type,
-          type: DBProvider.convertType(f.type)
-        };
-
         if ('relation' in f) {
+          addField(f.name, f.type);
+          
           let onDeleteClause: string = "";
 
           switch (f.relation.onDelete) {
@@ -91,10 +115,10 @@ class DBProvider {
 
           switch (f.relation.kind) {
             case "one-to-one":
-              fields.push(`${f.name} ${inSchema[name][f.name].defaultType} UNIQUE REFERENCES ${f.relation.table}(${f.relation.column}) ${f.required ? "NOT NULL" : ""} ${onDeleteClause}`);
+              fields.push(`${f.name} ${tSchema[f.name].defaultType} UNIQUE REFERENCES ${f.relation.table}(${f.relation.column}) ${f.required ? "NOT NULL" : ""} ${onDeleteClause}`);
               break;
             case "many-to-one":
-              fields.push(`${f.name} ${inSchema[name][f.name].defaultType} REFERENCES ${f.relation.table}(${f.relation.column}) ${f.required ? "NOT NULL" : ""} ${onDeleteClause}`);
+              fields.push(`${f.name} ${tSchema[f.name].defaultType} REFERENCES ${f.relation.table}(${f.relation.column}) ${f.required ? "NOT NULL" : ""} ${onDeleteClause}`);
               break;
           }
 
@@ -105,19 +129,22 @@ class DBProvider {
         } else {
           if (f.localized) {
             for (let locale of LocalizationProvider.getInstance().locales) {
-              fields.push(`${f.name}_${locale} ${inSchema[name][f.name].defaultType} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
+              addField(`${f.name}_${locale}`, f.type);
+              fields.push(`${f.name}_${locale} ${tSchema[`${f.name}_${locale}`].defaultType} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
             }
           } else {
-            fields.push(`${f.name} ${inSchema[name][f.name].defaultType} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
+            addField(f.name, f.type);
+            fields.push(`${f.name} ${tSchema[f.name].defaultType} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
           }
         }
       });
 
       tableSchema.push({
         name: name,
-        sql: fields.join(", "),
+        fields: fields,
         relations: relations
       });
+      DBProvider.extendSchema(name, tSchema);
     }
 
     while (tableSchema.length > 0) {
@@ -134,14 +161,19 @@ class DBProvider {
 
       if (selectedTable === null) throw new Error("Circular dependency in DB schema");
 
-      await DBProvider.instance.query(`CREATE TABLE IF NOT EXISTS ${selectedTable.name} (${selectedTable.sql})`);
+      await DBProvider.instance.createTable({
+        name: selectedTable.name,
+        fields: selectedTable.fields
+      });
       tableSchema.splice(selectedTableIndex, 1);
       for (let i=0; i<tableSchema.length; i++) {
         tableSchema[i].relations.delete(selectedTable.name);
       }
     }
+  }
 
-    DBProvider.instance.schema = inSchema;
+  public static extendSchema (name: string, table: DBTableObject) {
+    DBProvider.instance.schema[name] = table;
   }
 
   public static fieldsOf<T>(...keys: (keyof T)[]): (keyof T)[] {
@@ -152,6 +184,8 @@ class DBProvider {
     sqlType = sqlType.toLowerCase();
 
     if (sqlType.startsWith("richtext")) return "richText";
+
+    if (sqlType.startsWith("datetime")) return "datetime";
 
     if (sqlType.startsWith("varchar")) return "string";
 
@@ -208,6 +242,10 @@ class DBProvider {
 
   async queryWithResult<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> {
     return this.driver.queryWithResult<T>(sql, params);
+  }
+
+  async createTable(options: CreateTableOptions) {
+    await this.driver.createTable(options);
   }
 };
 

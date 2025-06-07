@@ -16,15 +16,33 @@ export default class AuthProvider {
     return AuthProvider.instance;
   }
 
-  public static setup(config: AuthConfig) {
+  public static async setup(config: AuthConfig) {
     AuthProvider.instance = new AuthProvider();
     if ("jwt_secret" in config) AuthProvider.instance.jwt_secret = config.jwt_secret as string;
     if ("secure_cookies" in config) AuthProvider.instance.secure_cookies = config.secure_cookies as boolean;
 
-    DBProvider.getInstance().query(`CREATE TABLE IF NOT EXISTS users (
-      login VARCHAR(255) PRIMARY KEY,
-      password CHAR(60) NOT NULL
-    )`);
+    await DBProvider.getInstance().createTable({
+      name: "users",
+      fields: [
+        "login VARCHAR(255) UNIQUE",
+        "password CHAR(60)"
+      ]
+    });
+
+    DBProvider.extendSchema("users", {
+      id: {
+        defaultType: "INTEGER",
+        type: "number"
+      },
+      login: {
+        defaultType: "VARCHAR(255)",
+        type: "string"
+      },
+      password: {
+        defaultType: "CHAR(60)",
+        type: "string"
+      }
+    });
   }
 
   private constructor () {
@@ -149,5 +167,9 @@ export default class AuthProvider {
     } else {
       reply.code(403).send({ error: 'Invalid login/password pair' });
     }
+  }
+
+  public logout (request: FastifyRequest, reply: FastifyReply) {
+    reply.clearCookie("token");
   }
 }

@@ -45,7 +45,7 @@ export default function LoginForm ({ onAuthorized }: Props) {
       <span className="text-xl text-center">Sign in</span>
       <input type="text" className="p-2 rounded border" value={login} onChange={e => {setLogin(e.target.value)}} placeholder="Login" />
       <input type="password" className="p-2 rounded border" value={pwd} onChange={e => {setPwd(e.target.value)}} placeholder="Password" />
-      <div className="bg-slate-500 hover:bg-slate-600 p-2 text-white rounded cursor-pointer" onClick={tryLogin}>
+      <div className="bg-slate-500 hover:bg-slate-600 p-2 text-white rounded cursor-pointer select-none" onClick={tryLogin}>
         Submit
       </div>
     </div>

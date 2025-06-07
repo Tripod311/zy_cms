@@ -43,6 +43,6 @@ export default function Application () {
 		case "unauth":
 			return <LoginForm onAuthorized={() => {setState("auth")}} />;
 		case "auth":
-			return <Dashboard />;
+			return <Dashboard />
 	}
 }
