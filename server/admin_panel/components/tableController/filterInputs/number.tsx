@@ -8,7 +8,7 @@ type Props = {
 }
 
 export default function NumberInput ({ title, initialValue, onChange }: Props) {
-  const [value, setValue] = useState<FilterField<number>>(initialValue || {type: "eq", value: ""});
+  const [value, setValue] = useState<FilterField<number>>(initialValue || {type: "none", value: ""});
 
   const typeChange = (e) => {
     setValue({
@@ -36,6 +36,7 @@ export default function NumberInput ({ title, initialValue, onChange }: Props) {
     <span className="text-lg">{title}</span>
     <div className="flex flex-col gap-2 max-w-[50%]">
       <select className="rounded-xl p-2 border" value={value.type} onChange={typeChange}>
+        <option value="none">Not active</option>
         <option value="lt">lt</option>
         <option value="gt">gt</option>
         <option value="lte">lte</option>

@@ -68,6 +68,10 @@ export function buildWhere<T = unknown>(filter: WhereFilter<T>): { sql: string, 
             params.push(...opValue);
           }
           break;
+        case "$like":
+          clauses.push(`${key} like ?`);
+          params.push(opValue);
+          break;
         default:
           throw new Error(`Unsupported operator: ${op}`);
       }

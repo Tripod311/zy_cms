@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { DBTableObject, Filter, DBJSType, FilterField } from "../../types";
+import { useState, useEffect, useRef } from "react";
+import { DBTableObject, Filter, DBJSType, FilterField, OutFilter, OutFilterField } from "../../types";
 import TextInput from "./filterInputs/text";
 import NumberInput from "./filterInputs/number";
 import DateInput from "./filterInputs/date";
@@ -13,10 +13,32 @@ type Props = {
 
 export default function FilterView ({ initialValue, tableSchema, onChange }: Props) {
   const [value, setValue] = useState<Filter>(initialValue || {});
+  const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     setValue({});
   }, [tableSchema]);
+
+  useEffect(() => {
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      let outValue: OutFilterField = {};
+
+      for (let i in value) {
+        if (value[i].type === 'none') continue;
+        outValue[i] = {};
+        outValue[i]["$"+value[i].type] = value[i].value;
+      }
+
+      onChange(outValue);
+    }, 200);
+  }, [value]);
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(timeoutRef.current);
+    }
+  }, []);
 
   const formFieldChange = (k, v) => {
     const nv = Object.assign({}, value);
@@ -28,7 +50,6 @@ export default function FilterView ({ initialValue, tableSchema, onChange }: Pro
     {
       Object.keys(tableSchema).map(key => {
         const field = tableSchema[key];
-        console.log(field);
 
         switch (field.type) {
           case "string":

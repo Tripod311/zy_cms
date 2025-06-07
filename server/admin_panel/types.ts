@@ -14,3 +14,19 @@ export type FilterField<T> = { type: 'lt' | 'lte' | 'gt' | 'gte' | 'eq' | 'ne'; 
 export type Filter<T> = {
   [key in keyof T]?: FilterField<T[key]>;
 };
+
+export type OutFilterField<T> = {
+  $eq?: T;
+  $ne?: T;
+  $in?: T[];
+  $nin?: T[];
+  $gt?: T;
+  $gte?: T;
+  $lt?: T;
+  $lte?: T;
+  $like?: string;
+}
+
+export type OutFilter<T> = {
+  [key in keyof T]?: OutFilterField<T[key]>;
+}
