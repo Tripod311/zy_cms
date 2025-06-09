@@ -68,16 +68,22 @@ class DBProvider {
 
       const addField = (name: string, type: string) => {
         switch (type) {
-          case "richText":
+          case "markdown":
             tSchema[name] = {
               defaultType: "LONGTEXT",
-              type: DBProvider.convertType(type)
+              type: "markdown"
+            };
+            break;
+          case "json":
+            tSchema[name] = {
+              defaultType: "LONGTEXT",
+              type: "json"
             };
             break;
           case "datetime":
             tSchema[name] = {
               defaultType: "VARCHAR(30)",
-              type: DBProvider.convertType(type)
+              type: "datetime"
             };
             break;
           default:
@@ -182,10 +188,6 @@ class DBProvider {
 
   private static convertType (sqlType: string): DBJSType {
     sqlType = sqlType.toLowerCase();
-
-    if (sqlType.startsWith("richtext")) return "richText";
-
-    if (sqlType.startsWith("datetime")) return "datetime";
 
     if (sqlType.startsWith("varchar")) return "string";
 

@@ -1,4 +1,4 @@
-export type DBJSType = 'string' | 'richText' | 'datetime' | 'number' | 'Uint8Array' | 'boolean';
+export type DBJSType = 'string' | 'markdown' | 'json' | 'datetime' | 'number' | 'Uint8Array' | 'boolean';
 
 export type DBTableObject = Record<string, {
   defaultType: string;
@@ -30,3 +30,7 @@ export type OutFilterField<T> = {
 export type OutFilter<T> = {
   [key in keyof T]?: OutFilterField<T[key]>;
 }
+
+export type RowFieldType = string | number | boolean;
+
+export type Row = Record<string, RowFieldType>;

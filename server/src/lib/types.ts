@@ -104,7 +104,7 @@ export interface User {
   password?: string;
 }
 
-export type DBJSType = 'string' | 'richText' | 'datetime' | 'number' | 'Uint8Array' | 'boolean';
+export type DBJSType = 'string' | 'markdown' | 'json' | 'datetime' | 'number' | 'Uint8Array' | 'boolean';
 export type DBTableObject = Record<string, {
   defaultType: string;
   type: DBJSType;

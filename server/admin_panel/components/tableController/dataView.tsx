@@ -11,6 +11,7 @@ type Props = {
   tableSchema: DBTableObject;
   forceUpdate: boolean;
   onSelect: (data: Record<string, DBJSType>) => void;
+  selectedRow: Record<string, DBJSType>;
 };
 
 interface Location {
@@ -18,11 +19,11 @@ interface Location {
   canGoForward: boolean;
 }
 
-export default function DataView ({ forceUpdate, tableName, tableSchema, filter, onSelect }: Props) {
+export default function DataView ({ forceUpdate, tableName, tableSchema, filter, onSelect, selectedRow }: Props) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState([]);
-  const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
   const [location, setLocation] = useState<Location>({offset: 0, canGoForward: true});
 
   const cols = Object.keys(tableSchema);
@@ -31,6 +32,7 @@ export default function DataView ({ forceUpdate, tableName, tableSchema, filter,
   const update = async () => {
     setError(null);
     setPending(true);
+    onSelect(null);
 
     const response = await fetch("/admin/api/" + tableName, {
       method: "POST",
@@ -38,6 +40,10 @@ export default function DataView ({ forceUpdate, tableName, tableSchema, filter,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
+        fields: Object.keys(tableSchema).filter(fName => {
+          // do not request blobs
+          return tableSchema[fName].type !== "Uint8Array";
+        }),
         where: filter,
         limit: LIMIT,
         offset: location.offset
@@ -64,9 +70,15 @@ export default function DataView ({ forceUpdate, tableName, tableSchema, filter,
   }
 
   const selectRow = (index) => {
-    setSelectedRow(index);
+    setSelectedRowIndex(index);
     onSelect(rows[index]);
   }
+
+  useEffect(() => {
+    if (!selectedRow) {
+      setSelectedRowIndex(null);
+    }
+  }, [selectedRow]);
 
   const nextPage = () => {
     if (!location.canGoForward) return;
@@ -129,7 +141,7 @@ export default function DataView ({ forceUpdate, tableName, tableSchema, filter,
         <tbody>
           {
             rows.map((row, index) => {
-              return <tr key={index} className={selectedRow === index ? "h-[40px] bg-gray-200 cursor-pointer" : "h-[40px] hover:bg-gray-50 cursor-pointer"} onClick={() => {selectRow(index)}}>
+              return <tr key={index} className={selectedRowIndex === index ? "h-[40px] bg-gray-200 cursor-pointer" : "h-[40px] hover:bg-gray-50 cursor-pointer"} onClick={() => {selectRow(index)}}>
                 {
                   displayCols.map(col => {
                     return <td className="px-4 py-2 border-b border-gray-200 truncate" key={`${index}_${col}`}>{row[col] || "NULL"}</td>
