@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import mime from "mime-types";
 import { FastifyRequest, FastifyReply } from "fastify";
-import { StorageFile, StorageConfig } from "./types";
+import { StorageFile, StorageConfig, ReadOptions } from "./types";
 import DBProvider from "./db";
 import APIProvider from "./api";
 import AuthProvider from "./auth";
@@ -41,6 +41,11 @@ export default class StorageProvider {
     app.get("/storage/:alias", {
       preHandler: !config.publicGET ? [AuthProvider.getInstance().handlers.forceAuth] : [],
       handler: StorageProvider.instance.getByAlias.bind(StorageProvider.instance)
+    });
+
+    app.post("/storage", {
+      preHandler: [AuthProvider.getInstance().handlers.forceAuth],
+      handler: StorageProvider.instance.getParameterized.bind(StorageProvider.instance)
     });
 
     app.post("/storage/:alias", {
@@ -135,6 +140,14 @@ export default class StorageProvider {
     }
   }
 
+  public async getParameterized (request: FastifyRequest, reply: FastifyReply) {
+    const options = request.body as ReadOptions;
+
+    const results = await DBProvider.getInstance().read<StorageFile>("media", { fields:['id', 'alias'], ...options });
+
+    reply.send({ error: null, data: results });
+  }
+
   public async postByAlias (request: FastifyRequest, reply: FastifyReply) {
     const { alias } = request.params as StorageFile;
 
@@ -148,7 +161,7 @@ export default class StorageProvider {
 
     const { filename, file } = fileInfo;
 
-    const filePath = path.join(this.basePath, `${alias}_${(new Date()).toString()}${path.extname(filename) || ''}`);
+    const filePath = path.join(this.basePath, `${alias}_${(new Date()).toISOString()}${path.extname(filename) || ''}`);
     const writeStream = fs.createWriteStream(filePath);
 
     try {
@@ -156,6 +169,11 @@ export default class StorageProvider {
         file.pipe(writeStream);
         file.on('end', resolve);
         file.on('error', reject);
+      });
+
+      await DBProvider.getInstance().create("media", {
+        alias: alias,
+        path: filePath
       });
 
       reply.send({ error: null });

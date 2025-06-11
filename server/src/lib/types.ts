@@ -93,6 +93,7 @@ export interface DBSchema {
 }
 
 export interface StorageFile {
+  id?: number;
   alias: string;
   extension?: string;
   path?: string;
