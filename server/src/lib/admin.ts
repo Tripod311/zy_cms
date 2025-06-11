@@ -100,31 +100,43 @@ export default class AdminPanel {
       }
     });
 
-    app.put("/admin/api/users/:login", {
+    app.put("/admin/api/users/:id", {
       preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
-        const { login } = request.params as User;
-        const { password } = request.body as { password: string; };
+        const { id } = request.params as { id: number; };
+        const rows = await DBProvider.getInstance().read<User>("users", {fields: ["login"], where: {id: id}});
+        if (rows.length === 0) {
+          reply.code(404).send({ error: "User not found" });
+        } else {
+          const { login, password } = request.body as User;
 
-        await AuthProvider.getInstance().update(login, password);
+          await AuthProvider.getInstance().update(login, password as string);
 
-        reply.send({ error: false });
+          reply.send({ error: false });
+        }
       }
     });
 
-    app.delete("/admin/api/users/:login", {
+    app.delete("/admin/api/users/:id", {
       preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
-        const { login } = request.params as User;
+        const { id } = request.params as { id: number; };
+        const rows = await DBProvider.getInstance().read<User>("users", {fields: ["login"], where: {id: id}});
 
-        if (login === request.user?.login) {
-          reply.code(500).send({
-            error: "User can't delete himself"
-          });
-        } else {
-          await AuthProvider.getInstance().delete(login);
-
+        if (rows.length === 0) {
           reply.send({ error: false });
+        } else {
+          const login = rows[0].login;
+
+          if (login === request.user?.login) {
+            reply.code(500).send({
+              error: "User can't delete himself"
+            });
+          } else {
+            await AuthProvider.getInstance().delete(login);
+
+            reply.send({ error: false });
+          }
         }
       }
     });
@@ -177,19 +189,19 @@ export default class AdminPanel {
       }
     });
 
-    app.put("/admin/api/:table", {
+    app.put("/admin/api/:table/:id", {
       preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
-        const { table } = request.params as { table: string; };
+        const { table, id } = request.params as { table: string; id: number; };
         const schema = DBProvider.getInstance().schema;
-        const { options, data } = request.body as { options: UpdateOptions; data: Partial<unknown>; }
+        const data = request.body as Partial<unknown>;
 
         if (!(table in schema)) {
           reply.code(500).send({
             error: `Unknown table ${table}`
           });
         } else {
-          await DBProvider.getInstance().update(table, data, options);
+          await DBProvider.getInstance().update(table, data, { where: { id: id } });
           reply.send({
             error: false
           });
@@ -197,19 +209,18 @@ export default class AdminPanel {
       }
     });
 
-    app.delete("/admin/api/:table", {
+    app.delete("/admin/api/:table/:id", {
       preHandler: [AuthProvider.getInstance().handlers.forceAuth],
       handler: async (request, reply) => {
-        const { table } = request.params as { table: string; };
+        const { table, id } = request.params as { table: string; id: number; };
         const schema = DBProvider.getInstance().schema;
-        const options = request.body as DeleteOptions;
 
         if (!(table in schema)) {
           reply.code(500).send({
             error: `Unknown table ${table}`
           });
         } else {
-          await DBProvider.getInstance().delete(table, options);
+          await DBProvider.getInstance().delete(table, { where: { id: id } });
           reply.send({
             error: false
           });

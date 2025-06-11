@@ -10,5 +10,5 @@ export default function StringInput ({ title, value, onChange }: Props) {
 		<input type="text" className="p-2 rounded border" value={value} onInput={e => {
 			onChange(e.target.value);
 		}}/>
-	</div>
+	</div>;
 }

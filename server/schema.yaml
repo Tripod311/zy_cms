@@ -10,7 +10,7 @@ tables:
       required: true
       unique: true
     - name: content
-      type: "markdown"
+      type: "json"
       required: true
       localized: true
     - name: author

@@ -3,6 +3,7 @@ import Spinner from "./spinner";
 import Overlay from "./overlay";
 import SchemaTree from "./schemaTree";
 import TableController from "./tableController";
+import MediaTableController from "./mediaTableController";
 import { DBSchemaObject } from "../types";
 
 export default function Dashboard () {
@@ -28,6 +29,14 @@ export default function Dashboard () {
     }
   }
 
+  const renderTableControls = () => {
+    if (table === null) return null;
+
+    if (table === "media") return <MediaTableController />
+    
+    return <TableController tableName={table} tableSchema={schema[table]} />;
+  }
+
   useEffect(reloadSchema, []);
 
   if (error === null && schema === null) {
@@ -42,9 +51,7 @@ export default function Dashboard () {
         <div className="w-[300px] h-full">
           <SchemaTree schema={schema} onSelected={onSelect} />
         </div>
-        {table === null ? null :
-          <TableController tableName={table} tableSchema={schema[table]} />
-        }
+        { renderTableControls() }
       </div>
       <Overlay schema={schema} onSelected={onSelect} />
     </>

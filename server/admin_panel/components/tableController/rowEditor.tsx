@@ -10,6 +10,7 @@ import JSONInput from "./rowInputs/json";
 import MarkdownInput from "./rowInputs/markdown";
 
 type Props = {
+  forceUpdate: boolean;
   tableSchema: DBTableObject;
   data?: Row;
   addRow: (data: Row) => void;
@@ -17,27 +18,28 @@ type Props = {
   deleteRow: (data: Row) => void;
 }
 
-export default function RowEditor ({ tableSchema, data, addRow, updateRow, deleteRow }: Props) {
+export default function RowEditor ({ forceUpdate, tableSchema, data, addRow, updateRow, deleteRow }: Props) {
   const fillValue = (): Row => {
     if (data === null) {
       let v = {};
       for (let i in tableSchema) {
-        switch (tableSchema[i].type) {
-          case "string":
-          case "json":
-          case "markdown":
-            v[i] = "";
-            break;
-          case "number":
-            v[i] = 0;
-            break;
-          case "boolean":
-            v[i] = false;
-            break;
-          case "datetime":
-            v[i] = (new Date()).toISOString();
-            break;
-        }
+        // switch (tableSchema[i].type) {
+        //   case "string":
+        //   case "json":
+        //   case "markdown":
+        //     v[i] = "";
+        //     break;
+        //   case "number":
+        //     v[i] = 0;
+        //     break;
+        //   case "boolean":
+        //     v[i] = false;
+        //     break;
+        //   case "datetime":
+        //     v[i] = (new Date()).toISOString();
+        //     break;
+        // }
+        v[i] = undefined;
       }
       return v;
     } else {
@@ -51,10 +53,18 @@ export default function RowEditor ({ tableSchema, data, addRow, updateRow, delet
     setValue(fillValue());
   }, [tableSchema, data]);
 
+  useEffect(() => {
+    if (forceUpdate) {
+      setValue(fillValue());
+    }
+  }, [forceUpdate]);
+
   const inputChanged = (fieldName, fieldValue) => {
-    const nv = Object.assign({}, value);
-    nv[fieldName] = fieldValue;
-    setValue(nv);
+    setValue(prev => {
+      const nv = Object.assign({}, prev);
+      nv[fieldName] = fieldValue;
+      return nv
+    });
   };
 
   const onAdd = () => {
@@ -66,7 +76,7 @@ export default function RowEditor ({ tableSchema, data, addRow, updateRow, delet
   }
 
   const onDelete = () => {
-    addRow(value);
+    deleteRow(value);
   }
 
   return <div className="w-full p-2 flex flex-col gap-2">
