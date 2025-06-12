@@ -11,7 +11,8 @@
   "license": "MIT",
   "author": "Tripod ind.tripod@gmail.com",
   "type": "module",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/types.d.ts",
   "scripts": {
     "build:server": "tsc -p tsconfig-server.json && node ./fixPaths.js",
     "rebuild:server": "rm -rf dist && npm run build:server",
