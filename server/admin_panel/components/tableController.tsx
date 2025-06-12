@@ -19,6 +19,7 @@ export default function TableController ({ tableName, tableSchema }: Props) {
   const [pending, setPending] = useState<boolean>(false);
   const pendingAction = useRef<Promise<void> | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [forceUpdate, setForceUpdate] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,6 +51,8 @@ export default function TableController ({ tableName, tableSchema }: Props) {
       if (!response.ok) {
         setError(responseData.error);
       }
+
+      setForceUpdate(true);
     };
   }
 
@@ -76,6 +79,8 @@ export default function TableController ({ tableName, tableSchema }: Props) {
       if (!response.ok) {
         setError(responseData.error);
       }
+
+      setForceUpdate(true);
     };
   }
 
@@ -98,8 +103,14 @@ export default function TableController ({ tableName, tableSchema }: Props) {
       if (!response.ok) {
         setError(responseData.error);
       }
+
+      setForceUpdate(true);
     };
   }
+
+  useEffect(() => {
+    setForceUpdate(false);
+  }, [forceUpdate]);
 
   return <div className="w-full overflow-hidden relative">
     <div className="w-full h-full overflow-y-auto relative">
@@ -107,10 +118,10 @@ export default function TableController ({ tableName, tableSchema }: Props) {
         <FilterView tableSchema={tableSchema} onChange={(fv) => {setFilterValue(fv)}} />
       </Foldable>
       <div className="relative w-full h-[480px] border">
-          <DataView forceUpdate={!loading} tableName={tableName} tableSchema={tableSchema} filter={filterValue} selectedRow={selectedRow} onSelect={(data) => {setSelectedRow(data)}} />
+          <DataView forceUpdate={forceUpdate} tableName={tableName} tableSchema={tableSchema} filter={filterValue} selectedRow={selectedRow} onSelect={(data) => {setSelectedRow(data)}} />
       </div>
       <RowEditor
-        forceUpdate={!loading}
+        forceUpdate={forceUpdate}
         tableSchema={tableSchema}
         data={selectedRow || null}
         addRow={addRow}

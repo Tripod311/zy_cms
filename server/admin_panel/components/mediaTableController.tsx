@@ -3,11 +3,12 @@ import Spinner from "./spinner";
 import Cross from "../images/cancel.svg";
 import Plus from "../images/plus.svg";
 
-const LIMIT = 20;
+const LIMIT = 10;
 
 interface Location {
   offset: number;
   canGoForward: boolean;
+  changed: boolean;
 }
 
 export default function MediaTableController () {
@@ -17,7 +18,7 @@ export default function MediaTableController () {
   const pendingAction = useRef<Promise<void> | null>(null);
 
   const [data, setData] = useState([]);
-  const [location, setLocation] = useState({ offset: 0, canGoForward: true });
+  const [location, setLocation] = useState({ offset: 0, canGoForward: true, changed: true });
   const [selectedFile, setSelectedFile] = useState<number | null>(null);
 
   const fileInput = useRef<HTMLElement>(null);
@@ -32,7 +33,8 @@ export default function MediaTableController () {
       },
       body: JSON.stringify({
         offset: location.offset,
-        limit: LIMIT
+        limit: LIMIT,
+        orderBy: ["id"]
       })
     });
 
@@ -43,7 +45,7 @@ export default function MediaTableController () {
       setData(responseData.data);
       setLocation({
         offset: location.offset,
-        canGoForward: responseData.data.length < LIMIT
+        canGoForward: responseData.data.length === LIMIT
       });
     } else {
       setError(responseData.error);
@@ -57,9 +59,9 @@ export default function MediaTableController () {
 
     setLocation({
       offset: location.offset + LIMIT,
-      canGoForward: true
+      canGoForward: true,
+      changed: true
     });
-    update();
   }
 
   const prevPage = () => {
@@ -69,10 +71,21 @@ export default function MediaTableController () {
 
     setLocation({
       offset: Math.max(0, location.offset - LIMIT),
-      canGoForward: true
+      canGoForward: true,
+      changed: true
     });
-    update();
   }
+
+  useEffect(() => {
+    if (location.changed) {
+      setLocation({
+        offset: location.offset,
+        canGoForward: location.canGoForward,
+        changed: false
+      });
+      update();
+    }
+  }, [location]);
 
   const triggerFileInput = () => {
     if (aliasValue.trim().length === 0) {
@@ -174,10 +187,6 @@ export default function MediaTableController () {
     }
   }
 
-  useEffect(() => {
-    update();
-  }, []);
-
   if (loading) {
     return <Spinner />
   } else {
@@ -205,15 +214,15 @@ export default function MediaTableController () {
         <div className="w-full flex flex-col">
           {
             data.map((f, index) => {
-              return <div key={index} className={selectedFile === index ? "bg-gray-200 cursor-pointer p-2 text-xl border" : "hover:bg-gray-50 cursor-pointer p-2 text-xl border"} onClick={() => { setSelectedFile(index) }}>
+              return <div key={index} className={selectedFile === index ? "bg-gray-200 cursor-pointer p-2 text-xl border-b" : "hover:bg-gray-50 cursor-pointer p-2 text-xl border-b"} onClick={() => { setSelectedFile(index) }}>
                 {f.alias}
               </div>
             })
           }
         </div>
         <div className="absolute w-full h-[40px] bottom-0 left-0 flex flex-row justify-between items-center p-2 border-t">
-          <div className="cursor-pointer">⬅️ Backward</div>
-          <div className="cursor-pointer">Forward ➡️</div>
+          <div className="cursor-pointer" onClick={prevPage}>⬅️ Backward</div>
+          <div className="cursor-pointer" onClick={nextPage}>Forward ➡️</div>
         </div>
       </div>
       {

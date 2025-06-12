@@ -17,14 +17,15 @@ type Props = {
 interface Location {
   offset: number;
   canGoForward: boolean;
+  changed: boolean;
 }
 
 export default function DataView ({ forceUpdate, tableName, tableSchema, filter, onSelect, selectedRow }: Props) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState([]);
-  const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
-  const [location, setLocation] = useState<Location>({offset: 0, canGoForward: true});
+  const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
+  const [location, setLocation] = useState<Location>({offset: 0, canGoForward: true, changed: false});
 
   const cols = Object.keys(tableSchema);
   const [displayCols, setDisplayCols] = useState(cols.length > 3 ? cols.slice(0,3) : cols);
@@ -32,7 +33,6 @@ export default function DataView ({ forceUpdate, tableName, tableSchema, filter,
   const update = async () => {
     setError(null);
     setPending(true);
-    onSelect(null);
 
     const response = await fetch("/admin/api/" + tableName, {
       method: "POST",
@@ -59,7 +59,8 @@ export default function DataView ({ forceUpdate, tableName, tableSchema, filter,
         setRows(data.rows);
         setLocation({
           offset: location.offset,
-          canGoForward: data.rows.length < LIMIT
+          canGoForward: data.rows.length === LIMIT,
+          changed: false
         });
       }
     } else {
@@ -69,14 +70,14 @@ export default function DataView ({ forceUpdate, tableName, tableSchema, filter,
     }
   }
 
-  const selectRow = (index) => {
-    setSelectedRowIndex(index);
-    onSelect(rows[index]);
+  const selectRow = (id) => {
+    setSelectedRowId(id);
+    onSelect(rows.find(r => r.id === id));
   }
 
   useEffect(() => {
     if (!selectedRow) {
-      setSelectedRowIndex(null);
+      setSelectedRowId(null);
     }
   }, [selectedRow]);
 
@@ -85,9 +86,9 @@ export default function DataView ({ forceUpdate, tableName, tableSchema, filter,
 
     setLocation({
       offset: location.offset + LIMIT,
-      canGoForward: true
+      canGoForward: true,
+      changed: true
     });
-    update();
   }
 
   const prevPage = () => {
@@ -95,9 +96,9 @@ export default function DataView ({ forceUpdate, tableName, tableSchema, filter,
 
     setLocation({
       offset: Math.max(0, location.offset - LIMIT),
-      canGoForward: true
+      canGoForward: true,
+      changed: true
     });
-    update();
   }
 
   useEffect(() => {
@@ -108,16 +109,21 @@ export default function DataView ({ forceUpdate, tableName, tableSchema, filter,
   useEffect(() => {
     setLocation({
       offset: 0,
-      canGoForward: true
+      canGoForward: true,
+      changed: true
     });
-    update();
   }, [filter, tableSchema]);
 
   useEffect(() => {
-    if (forceUpdate) {
+    if (forceUpdate || location.changed) {
+      setLocation({
+        offset: location.offset,
+        canGoForward: location.canGoForward,
+        changed: false
+      });
       update();
     }
-  }, [forceUpdate]);
+  }, [forceUpdate, location]);
 
   if (pending) {
     return <Spinner />;
@@ -127,8 +133,8 @@ export default function DataView ({ forceUpdate, tableName, tableSchema, filter,
     return <div className="w-full h-full overflow-auto relative">
       <TableColumns columns={Object.keys(tableSchema)} visible={displayCols} onChange={v => {setDisplayCols(v)}} />
       <div className="absolute w-full h-[40px] bottom-0 left-0 flex flex-row justify-between items-center p-2 border-t">
-        <div className="cursor-pointer">⬅️ Backward</div>
-        <div className="cursor-pointer">Forward ➡️</div>
+        <div className="cursor-pointer" onClick={prevPage}>⬅️ Backward</div>
+        <div className="cursor-pointer" onClick={nextPage}>Forward ➡️</div>
       </div>
       <table className="min-w-full border border-gray-300 text-sm text-left">
         <thead className="bg-gray-100 text-gray-700 uppercase h-[40px]">
@@ -141,7 +147,7 @@ export default function DataView ({ forceUpdate, tableName, tableSchema, filter,
         <tbody>
           {
             rows.map((row, index) => {
-              return <tr key={index} className={selectedRowIndex === index ? "h-[40px] bg-gray-200 cursor-pointer" : "h-[40px] hover:bg-gray-50 cursor-pointer"} onClick={() => {selectRow(index)}}>
+              return <tr key={index} className={selectedRowId === row.id ? "h-[40px] bg-gray-200 cursor-pointer" : "h-[40px] hover:bg-gray-50 cursor-pointer"} onClick={() => {selectRow(row.id)}}>
                 {
                   displayCols.map(col => {
                     return <td className="px-4 py-2 border-b border-gray-200 truncate" key={`${index}_${col}`}>{row[col] || "NULL"}</td>
