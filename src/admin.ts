@@ -9,12 +9,19 @@ import LocalizationProvider from "./localization";
 
 import { User, CreateOptions, ReadOptions, UpdateOptions, DeleteOptions } from "./types";
 
+
+function getAdminPanelPath () {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  return path.join(__dirname, '../admin_panel_dist');
+}
+
 export default class AdminPanel {
   public static async setup () {
     const app = APIProvider.getInstance();
 
     await app.register(FastifyStatic, {
-      root: path.resolve("./admin_panel_dist/"),
+      root: getAdminPanelPath(),
       prefix: "/admin",
       index: ["index.html"]
     });

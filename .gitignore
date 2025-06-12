@@ -1,5 +1,4 @@
 node_modules
-server/data
-server/dist
-server/admin_panel_dist
-server/firstLaunch
+data
+dist
+admin_panel_dist

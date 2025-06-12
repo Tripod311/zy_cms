@@ -1,5 +1,5 @@
 {
-  "name": "zy_cms_server",
+  "name": "@tripod311/zy_cms",
   "version": "1.0.0",
   "description": "Simple cms for simple services and websites",
   "keywords": [
@@ -8,7 +8,7 @@
     "typescript",
     "cms"
   ],
-  "license": "ISC",
+  "license": "MIT",
   "author": "Tripod ind.tripod@gmail.com",
   "type": "module",
   "main": "index.js",
@@ -20,6 +20,10 @@
     "clean": "rm -rf dist && rm -rf admin_panel_dist",
     "start": "node ./dist/index.js"
   },
+  "files": [
+    "dist",
+    "admin_panel_dist"
+  ],
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.8",
     "@tailwindcss/vite": "^4.1.8",
