@@ -8,7 +8,7 @@ type Props = {
   onChange: (v: string) => void;
 };
 
-export default function TextInput ({ value, onChange }: Props) {
+export default function TextInput ({ title, value, onChange }: Props) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView>();
 
