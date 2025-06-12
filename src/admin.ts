@@ -23,7 +23,8 @@ export default class AdminPanel {
     await app.register(FastifyStatic, {
       root: getAdminPanelPath(),
       prefix: "/admin",
-      index: ["index.html"]
+      index: ["index.html"],
+      decorateReply: false
     });
 
     // create first user
