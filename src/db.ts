@@ -195,6 +195,8 @@ class DBProvider {
 
     if (sqlType.startsWith("decimal") || sqlType.startsWith("numeric")) return "string";
 
+    if (sqlType === "tinyint(1)") return "boolean";
+
     if (sqlType.startsWith("float") || sqlType.startsWith("double") || sqlType.startsWith("tinyint")) return "number";
 
     switch (sqlType) {

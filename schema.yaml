@@ -13,6 +13,9 @@ tables:
       type: "json"
       required: true
       localized: true
+    - name: switch
+      type: "TINYINT(1)"
+      required: false
     - name: author
       type: "VARCHAR(255)"
       relation:
