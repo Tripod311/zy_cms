@@ -187,37 +187,32 @@ class DBProvider {
   }
 
   private static convertType (sqlType: string): DBJSType {
-    sqlType = sqlType.toLowerCase();
+    sqlType = sqlType.toLowerCase().trim();
 
-    if (sqlType.startsWith("varchar")) return "string";
+    if (sqlType.startsWith("tinyint(1)") || sqlType.startsWith("bool")) return "boolean";
 
-    if (sqlType.startsWith("binary") || sqlType.startsWith("varbinary")) return "Uint8Array";
-
-    if (sqlType.startsWith("decimal") || sqlType.startsWith("numeric")) return "string";
-
-    if (sqlType === "tinyint(1)") return "boolean";
-
-    if (sqlType.startsWith("float") || sqlType.startsWith("double") || sqlType.startsWith("tinyint")) return "number";
-
-    switch (sqlType) {
-      case "integer":
-      case "int":
-      case "smallint":
-      case "mediumint":
-      case "bigint":
-      case "real":
-        return "number";
-      case "blob":
-      case "tinyblob":
-      case "mediumblob":
-      case "longblob":
-        return "Uint8Array";
-      case "bool":
-      case "boolean":
-        return "boolean";
-      default:
-        return "string";
+    if (sqlType.startsWith("integer") ||
+      sqlType.startsWith("int") ||
+      sqlType.startsWith("smallint") ||
+      sqlType.startsWith("mediumint") ||
+      sqlType.startsWith("bigint") ||
+      sqlType.startsWith("real") ||
+      sqlType.startsWith("float") || 
+      sqlType.startsWith("double") ||
+      sqlType.startsWith("tinyint")) {
+      return "number";
     }
+
+    if (sqlType.startsWith("blob") ||
+      sqlType.startsWith("tinyblob") ||
+      sqlType.startsWith("mediumblob") ||
+      sqlType.startsWith("longblob") ||
+      sqlType.startsWith("binary") ||
+      sqlType.startsWith("varbinary")) {
+      return "Uint8Array";
+    }
+      
+    return "string";
   }
 
   public async disconnect () {
