@@ -3,12 +3,13 @@ import { EditorState } from "@codemirror/state";
 import { EditorView, basicSetup } from 'codemirror';
 
 type Props = {
+  id: number;
   title: string;
   value: string;
   onChange: (v: string) => void;
 };
 
-export default function TextInput ({ title, value, onChange }: Props) {
+export default function TextInput ({ id, title, value, onChange }: Props) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView>();
 
@@ -36,10 +37,10 @@ export default function TextInput ({ title, value, onChange }: Props) {
     return () => {
       viewRef.current?.destroy();
     };
-  }, [value, onChange]);
+  }, [id]);
 
   return <div className="w-full grid grid-cols-[200px_auto] gap-2">
     <span className="grow-1 text-lg truncate">{title}</span>
-    <div ref={editorRef} className="border rounded h-[400px]" />;
+    <div ref={editorRef} className="border rounded h-[400px] overflow-auto" />
   </div>
 };
