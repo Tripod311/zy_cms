@@ -43,8 +43,22 @@ export default class APIProvider {
     await APIProvider.instance.register(multipart);
 
     if (config.cors !== undefined) {
+      let origin;
+
+      if (Array.isArray(config.cors.origin)) {
+        origin = (o: string | undefined, cb: (err: Error | null, allow: boolean) => void) => {
+          if (o !== undefined && config.cors?.origin.includes(o)) {
+            cb(null, true);
+          } else {
+            cb(new Error("Not allowed"), false);
+          }
+        }
+      } else {
+        origin = config.cors.origin;
+      }
+
       await APIProvider.instance.register(cors, {
-        origin: config.cors.origin,
+        origin: origin,
         methods: config.cors.methods
       });
     }
