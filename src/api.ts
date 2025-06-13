@@ -74,7 +74,8 @@ export default class APIProvider {
 
   public static async start () {
     await APIProvider.instance.listen({
-      port: APIProvider.port
+      port: APIProvider.port,
+      host: "0.0.0.0"
     }, () => {
       console.log("Listening on " + APIProvider.port);
     });
