@@ -47,7 +47,7 @@ export default class APIProvider {
 
       if (Array.isArray(config.cors.origin)) {
         origin = (o: string | undefined, cb: (err: Error | null, allow: boolean) => void) => {
-          if (o !== undefined && config.cors?.origin.includes(o)) {
+          if (!o || config.cors?.origin.includes(o)) {
             cb(null, true);
           } else {
             cb(new Error("Not allowed"), false);
