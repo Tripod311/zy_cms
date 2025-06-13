@@ -16,6 +16,8 @@ tables:
     - name: switch
       type: "TINYINT(1)"
       required: false
+    - name: text
+      type: "TEXT"
     - name: author
       type: "VARCHAR(255)"
       relation:

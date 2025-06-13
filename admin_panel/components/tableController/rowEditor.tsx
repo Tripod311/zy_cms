@@ -89,7 +89,7 @@ export default function RowEditor ({ forceUpdate, tableSchema, data, addRow, upd
         switch (field.type) {
           case "string":
             if (field.defaultType.toLowerCase().startsWith("text") || field.defaultType.toLowerCase().startsWith("mediumtext") || field.defaultType.toLowerCase().startsWith("longtext")) {
-              return <TextInput key={fieldName} title={fieldName} value={value[fieldName]} onChange={(v) => {inputChanged(fieldName, v)}} />
+              return <TextInput key={fieldName} title={fieldName} id={value.id} value={value[fieldName]} onChange={(v) => {inputChanged(fieldName, v)}} />
             } else {
               return <StringInput key={fieldName} title={fieldName} value={value[fieldName]} onChange={(v) => {inputChanged(fieldName, v)}} />
             }
