@@ -1,6 +1,6 @@
 {
   "name": "@tripod311/zy_cms",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Simple cms for simple services and websites",
   "keywords": [
     "fastify",
