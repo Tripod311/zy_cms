@@ -18,6 +18,8 @@ tables:
       required: false
     - name: text
       type: "TEXT"
+    - name: date
+      type: "datetime"
     - name: author
       type: "VARCHAR(255)"
       relation:
