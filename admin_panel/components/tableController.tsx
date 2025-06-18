@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import Spinner from "./spinner";
-import Foldable from "./tableController/foldable";
 import DataView from "./tableController/dataView";
 import FilterView from "./tableController/filterView";
 import RowEditor from "./tableController/rowEditor";
@@ -114,9 +113,7 @@ export default function TableController ({ tableName, tableSchema }: Props) {
 
   return <div className="w-full overflow-hidden relative">
     <div className="w-full h-full overflow-y-auto relative">
-      <Foldable title="Filter" fold={true}>
-        <FilterView tableSchema={tableSchema} onChange={(fv) => {setFilterValue(fv)}} />
-      </Foldable>
+      <FilterView tableSchema={tableSchema} onChange={(fv) => {setFilterValue(fv)}} />
       <div className="relative w-full h-[480px] border">
           <DataView forceUpdate={forceUpdate} tableName={tableName} tableSchema={tableSchema} filter={filterValue} selectedRow={selectedRow} onSelect={(data) => {setSelectedRow(data)}} />
       </div>

@@ -48,7 +48,7 @@ export default function Dashboard () {
   } else {
     return <>
       <div className="w-full h-full relative border-box overflow-hidden pt-[50px] flex flex-row">
-        <div className="w-[300px] h-full">
+        <div className="w-[300px] h-full hidden md:block">
           <SchemaTree schema={schema} onSelected={onSelect} />
         </div>
         { renderTableControls() }
