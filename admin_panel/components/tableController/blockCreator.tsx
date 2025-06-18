@@ -79,7 +79,7 @@ export default function BlockCreator ({schema, onAdd}: { schema: DBTableObject; 
       case "number":
         return <input type="number" className="rounded border" value={value.value} onInput={e => onValueChange(e.target.value)} />;
       case "datetime":
-        return <input type="datetime-local" className="rounded border" value={value.value.slice(0, 16)} onChange={(e) => {
+        return <input type="datetime-local" className="rounded border" value={value.value ? value.value.slice(0, 16) : null} onChange={(e) => {
           const value = e.target.value;
           const iso = new Date(value).toISOString();
           onValueChange(iso);
