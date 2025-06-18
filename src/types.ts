@@ -64,6 +64,7 @@ export interface AppConfig {
 export interface ColumnField {
   name: string;
   type: string;
+  distinct_type?: string;
   required?: boolean;
   unique?: boolean;
   localized?: boolean;
@@ -72,6 +73,7 @@ export interface ColumnField {
 export interface RelationField {
   name: string;
   type: string;
+  distinct_type?: string;
   required?: boolean;
   relation: {
     table: string;

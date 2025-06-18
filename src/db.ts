@@ -66,17 +66,17 @@ class DBProvider {
         }
       };
 
-      const addField = (name: string, type: string) => {
+      const addField = (name: string, type: string, distinct_type?: string) => {
         switch (type) {
           case "markdown":
             tSchema[name] = {
-              defaultType: "LONGTEXT",
+              defaultType: distinct_type || "LONGTEXT",
               type: "markdown"
             };
             break;
           case "json":
             tSchema[name] = {
-              defaultType: "LONGTEXT",
+              defaultType: distinct_type || "LONGTEXT",
               type: "json"
             };
             break;
@@ -97,7 +97,7 @@ class DBProvider {
 
       schema.tables[i].fields.map((f: FieldSchema) => {
         if ('relation' in f) {
-          addField(f.name, f.type);
+          addField(f.name, f.type, f.distinct_type);
           
           let onDeleteClause: string = "";
 
@@ -135,11 +135,11 @@ class DBProvider {
         } else {
           if (f.localized) {
             for (let locale of LocalizationProvider.getInstance().locales) {
-              addField(`${f.name}_${locale}`, f.type);
+              addField(`${f.name}_${locale}`, f.type, f.distinct_type);
               fields.push(`${f.name}_${locale} ${tSchema[`${f.name}_${locale}`].defaultType} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
             }
           } else {
-            addField(f.name, f.type);
+            addField(f.name, f.type, f.distinct_type);
             fields.push(`${f.name} ${tSchema[f.name].defaultType} ${f.required ? "NOT NULL" : ""} ${f.unique ? "UNIQUE" : ""}`);
           }
         }
