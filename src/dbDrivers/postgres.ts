@@ -40,7 +40,7 @@ class PostgresDriver implements DBDriver {
     let whereParams: unknown[] = [];
 
     if (options?.where) {
-      const parsed = buildWhere(options.where);
+      const parsed = buildWhere(options.where, 'postgres');
       whereSql = parsed.sql;
       whereParams = parsed.params;
     }
@@ -64,7 +64,7 @@ class PostgresDriver implements DBDriver {
     let whereParams: unknown[] = [];
 
     if (options?.where) {
-      const parsed = buildWhere(options.where);
+      const parsed = buildWhere(options.where, 'postgres');
       whereSql = parsed.sql;
       whereParams = parsed.params;
     }
@@ -78,7 +78,7 @@ class PostgresDriver implements DBDriver {
     let whereParams: unknown[] = [];
 
     if (options?.where) {
-      const parsed = buildWhere(options.where);
+      const parsed = buildWhere(options.where, 'postgres');
       whereSql = parsed.sql;
       whereParams = parsed.params;
     }

@@ -44,7 +44,7 @@ class SqliteDriver implements DBDriver {
     let whereParams: unknown[] = [];
 
     if (options?.where) {
-      const parsed = buildWhere(options.where);
+      const parsed = buildWhere(options.where, 'postgres');
       whereSql = parsed.sql;
       whereParams = parsed.params;
     }
@@ -70,7 +70,7 @@ class SqliteDriver implements DBDriver {
     let whereParams: unknown[] = [];
 
     if (options?.where) {
-      const parsed = buildWhere(options.where);
+      const parsed = buildWhere(options.where, 'postgres');
       whereSql = parsed.sql;
       whereParams = parsed.params;
     }
@@ -86,7 +86,7 @@ class SqliteDriver implements DBDriver {
     let whereParams: unknown[] = [];
 
     if (options?.where) {
-      const parsed = buildWhere(options.where);
+      const parsed = buildWhere(options.where, 'postgres');
       whereSql = parsed.sql;
       whereParams = parsed.params;
     }

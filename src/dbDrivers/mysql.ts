@@ -39,7 +39,7 @@ class MysqlDriver implements DBDriver {
     let whereParams: unknown[] = [];
 
     if (options?.where) {
-      const parsed = buildWhere(options.where);
+      const parsed = buildWhere(options.where, 'mysql');
       whereSql = parsed.sql;
       whereParams = parsed.params;
     }
@@ -63,7 +63,7 @@ class MysqlDriver implements DBDriver {
     let whereParams: unknown[] = [];
 
     if (options?.where) {
-      const parsed = buildWhere(options.where);
+      const parsed = buildWhere(options.where, 'mysql');
       whereSql = parsed.sql;
       whereParams = parsed.params;
     }
@@ -77,7 +77,7 @@ class MysqlDriver implements DBDriver {
     let whereParams: unknown[] = [];
 
     if (options?.where) {
-      const parsed = buildWhere(options.where);
+      const parsed = buildWhere(options.where, 'mysql');
       whereSql = parsed.sql;
       whereParams = parsed.params;
     }

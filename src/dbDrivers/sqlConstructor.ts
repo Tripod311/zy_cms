@@ -1,8 +1,18 @@
 import { WhereFilter, Operator, ReadOptions } from "../types"
 
-export function buildWhere<T = unknown>(filter: WhereFilter<T>): { sql: string, params: unknown[] } {
+export function buildWhere<T = unknown>(filter: WhereFilter<T>, driverType: 'sqlite' | 'mysql' | 'postgres' ): { sql: string, params: unknown[] } {
   const clauses: string[] = [];
   const params: unknown[] = [];
+
+  let counter = 1;
+
+  function getPlaceholder () {
+    if (driverType === 'postgres') {
+      return `$${counter++}`;
+    } else {
+      return '?';
+    }
+  }
 
   for (const key in filter) {
     const value = filter[key];
@@ -10,7 +20,7 @@ export function buildWhere<T = unknown>(filter: WhereFilter<T>): { sql: string, 
     if (value === undefined) continue;
 
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-      clauses.push(`${key} = ?`);
+      clauses.push(`${key} = ${getPlaceholder()}`);
       params.push(value);
       continue;
     }
@@ -25,38 +35,38 @@ export function buildWhere<T = unknown>(filter: WhereFilter<T>): { sql: string, 
 
       switch (op) {
         case '$eq':
-          clauses.push(`${key} = ?`);
+          clauses.push(`${key} = ${getPlaceholder()}`);
           params.push(opValue);
           break;
         case '$ne':
-          clauses.push(`${key} != ?`);
+          clauses.push(`${key} != ${getPlaceholder()}`);
           params.push(opValue);
           break;
         case '$gt':
-          clauses.push(`${key} > ?`);
+          clauses.push(`${key} > ${getPlaceholder()}`);
           params.push(opValue);
           break;
         case '$gte':
-          clauses.push(`${key} >= ?`);
+          clauses.push(`${key} >= ${getPlaceholder()}`);
           params.push(opValue);
           break;
         case '$lt':
-          clauses.push(`${key} < ?`);
+          clauses.push(`${key} < ${getPlaceholder()}`);
           params.push(opValue);
           break;
         case '$lte':
-          clauses.push(`${key} <= ?`);
+          clauses.push(`${key} <= ${getPlaceholder()}`);
           params.push(opValue);
           break;
         case '$like':
-          clauses.push(`${key} LIKE ?`);
+          clauses.push(`${key} LIKE ${getPlaceholder()}`);
           params.push(opValue);
           break;
         case '$in':
           if (!Array.isArray(opValue) || opValue.length === 0) {
             clauses.push('0');
           } else {
-            clauses.push(`${key} IN (${opValue.map(() => '?').join(', ')})`);
+            clauses.push(`${key} IN (${opValue.map(() => { return getPlaceholder() }).join(', ')})`);
             params.push(...opValue);
           }
           break;
@@ -64,12 +74,12 @@ export function buildWhere<T = unknown>(filter: WhereFilter<T>): { sql: string, 
           if (!Array.isArray(opValue) || opValue.length === 0) {
             clauses.push('1');
           } else {
-            clauses.push(`${key} NOT IN (${opValue.map(() => '?').join(', ')})`);
+            clauses.push(`${key} NOT IN (${opValue.map(() => { return getPlaceholder() }).join(', ')})`);
             params.push(...opValue);
           }
           break;
         case "$like":
-          clauses.push(`${key} like ?`);
+          clauses.push(`${key} like ${getPlaceholder()}`);
           params.push(opValue);
           break;
         default:
