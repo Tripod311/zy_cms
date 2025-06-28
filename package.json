@@ -23,7 +23,8 @@
   },
   "files": [
     "dist",
-    "admin_panel_dist"
+    "admin_panel_dist",
+    "README.md"
   ],
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.8",
